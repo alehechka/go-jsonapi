@@ -63,7 +63,11 @@ func CreateBaseURL(request *http.Request) (baseURL string, path string) {
 
 	protocol := request.Header.Get(ForwardedProto) // http | https
 	if len(protocol) == 0 {
-		protocol = request.URL.Scheme
+		if len(request.URL.Scheme) > 0 {
+			protocol = request.URL.Scheme
+		} else {
+			protocol = "http"
+		}
 	}
 
 	prefix := request.Header.Get(ForwardedPrefix) // proxied prefix

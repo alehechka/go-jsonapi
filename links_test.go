@@ -43,12 +43,12 @@ func TestTransformLinks(t *testing.T) {
 
 	transformed := jsonapi.TransformLinks(links, baseURL)
 
-	assert.Equal(t, transformed["1"], "https://example.com/api/objects")
-	assert.Equal(t, transformed["2"], "https://example.com/api/objects/123")
-	assert.Equal(t, transformed["3"], "https://example.com/api/objects?offset=25")
-	assert.Equal(t, transformed["4"], "https://example.com/api/objects?page[limit]=25")
-	assert.Equal(t, transformed["5"].(jsonapi.Link).Href, "https://example.com/api/objects")
-	assert.Equal(t, transformed["5"].(jsonapi.Link).Meta["random"], links["5"].Meta["random"])
+	assert.Equal(t, "https://example.com/api/objects", transformed["1"])
+	assert.Equal(t, "https://example.com/api/objects/123", transformed["2"])
+	assert.Equal(t, "https://example.com/api/objects?offset=25", transformed["3"])
+	assert.Equal(t, "https://example.com/api/objects?page[limit]=25", transformed["4"])
+	assert.Equal(t, "https://example.com/api/objects", transformed["5"].(jsonapi.Link).Href)
+	assert.Equal(t, links["5"].Meta["random"], transformed["5"].(jsonapi.Link).Meta["random"])
 }
 
 func TestTransformLink(t *testing.T) {
@@ -61,7 +61,7 @@ func TestTransformLink(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "")
 
-	assert.Equal(t, transformed, "/api/objects?offset=25")
+	assert.Equal(t, "/api/objects?offset=25", transformed)
 }
 
 func TestCreateNextLinksFromOffsetPaginationResponse(t *testing.T) {
@@ -69,17 +69,17 @@ func TestCreateNextLinksFromOffsetPaginationResponse(t *testing.T) {
 	num := 10
 	links := jsonapi.CreateNextLinksFromOffsetPaginationResponse(path, jsonapi.Params{"id": num}, true, num, num)
 
-	assert.Equal(t, len(links), 1)
+	assert.Equal(t, 1, len(links))
 
 	link := links["next"]
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[limit]=10&page[offset]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageOffset], num)
-	assert.Equal(t, link.Queries[jsonapi.PageLimit], num)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[limit]=10&page[offset]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageOffset])
+	assert.Equal(t, num, link.Queries[jsonapi.PageLimit])
 }
 
 func TestCreateNextLinkFromOffsetPaginationResponse_IsLink(t *testing.T) {
@@ -89,13 +89,13 @@ func TestCreateNextLinkFromOffsetPaginationResponse_IsLink(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[limit]=10&page[offset]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageOffset], num)
-	assert.Equal(t, link.Queries[jsonapi.PageLimit], num)
-	assert.Equal(t, key, "next")
-	assert.Equal(t, isLink, true)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[limit]=10&page[offset]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageOffset])
+	assert.Equal(t, num, link.Queries[jsonapi.PageLimit])
+	assert.Equal(t, "next", key)
+	assert.Equal(t, true, isLink)
 }
 
 func TestCreateNextLinkFromOffsetPaginationResponse_IsNotLink(t *testing.T) {
@@ -103,12 +103,12 @@ func TestCreateNextLinkFromOffsetPaginationResponse_IsNotLink(t *testing.T) {
 	num := 10
 	link, key, isLink := jsonapi.CreateNextLinkFromOffsetPaginationResponse(path, jsonapi.Params{"id": num}, false, num, num)
 
-	assert.Equal(t, link.Href, "")
-	assert.Equal(t, len(link.Params), 0)
-	assert.Equal(t, len(link.Queries), 0)
-	assert.Equal(t, len(link.Queries), 0)
-	assert.Equal(t, key, "")
-	assert.Equal(t, isLink, false)
+	assert.Equal(t, "", link.Href)
+	assert.Equal(t, 0, len(link.Params))
+	assert.Equal(t, 0, len(link.Queries))
+	assert.Equal(t, 0, len(link.Queries))
+	assert.Equal(t, "", key)
+	assert.Equal(t, false, isLink)
 }
 
 func TestCreateNextLinksFromCursorPaginationResponse(t *testing.T) {
@@ -118,18 +118,18 @@ func TestCreateNextLinksFromCursorPaginationResponse(t *testing.T) {
 	after := "4321"
 	links := jsonapi.CreateNextLinksFromCursorPaginationResponse(path, jsonapi.Params{"id": num}, num, &before, &after)
 
-	assert.Equal(t, len(links), 1)
+	assert.Equal(t, 1, len(links))
 
 	link := links["next"]
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[after]=4321&page[before]=1234&page[size]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageSize], num)
-	assert.Equal(t, link.Queries[jsonapi.PageBefore], before)
-	assert.Equal(t, link.Queries[jsonapi.PageAfter], after)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[after]=4321&page[before]=1234&page[size]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, before, link.Queries[jsonapi.PageBefore])
+	assert.Equal(t, after, link.Queries[jsonapi.PageAfter])
 }
 
 func TestCreateNextLinkFromCursorPaginationResponse(t *testing.T) {
@@ -141,14 +141,14 @@ func TestCreateNextLinkFromCursorPaginationResponse(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[after]=4321&page[before]=1234&page[size]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageSize], num)
-	assert.Equal(t, link.Queries[jsonapi.PageBefore], before)
-	assert.Equal(t, link.Queries[jsonapi.PageAfter], after)
-	assert.Equal(t, key, "next")
-	assert.Equal(t, isLink, true)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[after]=4321&page[before]=1234&page[size]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, before, link.Queries[jsonapi.PageBefore])
+	assert.Equal(t, after, link.Queries[jsonapi.PageAfter])
+	assert.Equal(t, "next", key)
+	assert.Equal(t, true, isLink)
 }
 
 func TestCreateNextLinkFromCursorPaginationResponse_NilBefore(t *testing.T) {
@@ -159,14 +159,14 @@ func TestCreateNextLinkFromCursorPaginationResponse_NilBefore(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[after]=4321&page[size]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageSize], num)
-	assert.Equal(t, link.Queries[jsonapi.PageBefore], nil)
-	assert.Equal(t, link.Queries[jsonapi.PageAfter], after)
-	assert.Equal(t, key, "next")
-	assert.Equal(t, isLink, true)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[after]=4321&page[size]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, nil, link.Queries[jsonapi.PageBefore])
+	assert.Equal(t, after, link.Queries[jsonapi.PageAfter])
+	assert.Equal(t, "next", key)
+	assert.Equal(t, true, isLink)
 }
 
 func TestCreateNextLinkFromCursorPaginationResponse_NilAfter(t *testing.T) {
@@ -177,14 +177,14 @@ func TestCreateNextLinkFromCursorPaginationResponse_NilAfter(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[before]=1234&page[size]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageSize], num)
-	assert.Equal(t, link.Queries[jsonapi.PageBefore], before)
-	assert.Equal(t, link.Queries[jsonapi.PageAfter], nil)
-	assert.Equal(t, key, "next")
-	assert.Equal(t, isLink, true)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[before]=1234&page[size]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, before, link.Queries[jsonapi.PageBefore])
+	assert.Equal(t, nil, link.Queries[jsonapi.PageAfter])
+	assert.Equal(t, "next", key)
+	assert.Equal(t, true, isLink)
 }
 
 func TestCreateNextLinkFromCursorPaginationResponse_EmptyStrings(t *testing.T) {
@@ -196,14 +196,14 @@ func TestCreateNextLinkFromCursorPaginationResponse_EmptyStrings(t *testing.T) {
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, link.Href, path)
-	assert.Equal(t, transformed, "https://example.com/example?page[size]=10")
-	assert.Equal(t, link.Params["id"], num)
-	assert.Equal(t, link.Queries[jsonapi.PageSize], num)
-	assert.Equal(t, link.Queries[jsonapi.PageBefore], before)
-	assert.Equal(t, link.Queries[jsonapi.PageAfter], after)
-	assert.Equal(t, key, "next")
-	assert.Equal(t, isLink, true)
+	assert.Equal(t, path, link.Href)
+	assert.Equal(t, "https://example.com/example?page[size]=10", transformed)
+	assert.Equal(t, num, link.Params["id"])
+	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, before, link.Queries[jsonapi.PageBefore])
+	assert.Equal(t, after, link.Queries[jsonapi.PageAfter])
+	assert.Equal(t, "next", key)
+	assert.Equal(t, true, isLink)
 }
 
 func TestCreateNextLinkFromCursorPaginationResponse_NilPointers(t *testing.T) {
@@ -211,10 +211,10 @@ func TestCreateNextLinkFromCursorPaginationResponse_NilPointers(t *testing.T) {
 	num := 10
 	link, key, isLink := jsonapi.CreateNextLinkFromCursorPaginationResponse(path, jsonapi.Params{"id": num}, num, nil, nil)
 
-	assert.Equal(t, link.Href, "")
-	assert.Equal(t, len(link.Params), 0)
-	assert.Equal(t, len(link.Queries), 0)
-	assert.Equal(t, len(link.Queries), 0)
-	assert.Equal(t, key, "")
-	assert.Equal(t, isLink, false)
+	assert.Equal(t, "", link.Href)
+	assert.Equal(t, 0, len(link.Params))
+	assert.Equal(t, 0, len(link.Queries))
+	assert.Equal(t, 0, len(link.Queries))
+	assert.Equal(t, "", key)
+	assert.Equal(t, false, isLink)
 }
