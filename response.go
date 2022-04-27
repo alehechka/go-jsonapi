@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// CreateJSONAPIResponse is a wrapper to jsonapi.CreateResponse that will create the baseURL parameters from gin.Context
+// CreateJSONAPIResponse is a wrapper to jsonapi.CreateResponse that will create the baseURL parameters from *http.Request
 func CreateJSONAPIResponse(request *http.Request) func(r Response) TransformedResponse {
 	return func(r Response) TransformedResponse {
 		baseURL, path := CreateBaseURL(request)
@@ -17,6 +17,7 @@ func CreateJSONAPIResponse(request *http.Request) func(r Response) TransformedRe
 	}
 }
 
+// AppendGeneratedSelfLink will generate a self link object based on provided *http.Request
 func AppendGeneratedSelfLink(request *http.Request) func(links Links, baseURL string, path string) Links {
 	return func(links Links, baseURL string, path string) Links {
 
@@ -53,6 +54,7 @@ const (
 	ForwardedHost string = "X-Forwarded-Host"
 )
 
+// CreateBaseURL will generate a baseURL, prioritizing proxied http headers
 func CreateBaseURL(request *http.Request) (baseURL string, path string) {
 	host := request.Header.Get(ForwardedHost) // host from primary source
 	if len(host) == 0 {
