@@ -11,6 +11,14 @@ package jsonapi
 
 // Response is the standard JSONAPI Response struct
 type Response struct {
+	Data     []Data
+	Included []Data
+	Errors   []Error
+	Links    Links
+	Meta     interface{}
+}
+
+type TransformedResponse struct {
 	Data     interface{}     `json:"data,omitempty"` // Data | []Data
 	Errors   []internalError `json:"errors,omitempty"`
 	Included []internalData  `json:"included,omitempty"`
@@ -19,13 +27,13 @@ type Response struct {
 }
 
 // CreateResponse transforms provided parameters into standardized JSONAPI format
-func CreateResponse(data, included []Data, errors []Error, links Links, meta interface{}, baseURL string) Response {
+func CreateResponse(r Response, baseURL string) TransformedResponse {
 
-	return Response{
-		Data:     transformToInternalDataStructs(data, baseURL),
-		Included: transformToInternalDataStructArray(included, baseURL),
-		Errors:   transformToInternalErrorStructs(errors, baseURL),
-		Links:    TransformLinks(links, baseURL),
-		Meta:     meta,
+	return TransformedResponse{
+		Data:     transformToInternalDataStructs(r.Data, baseURL),
+		Included: transformToInternalDataStructArray(r.Included, baseURL),
+		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Links:    TransformLinks(r.Links, baseURL),
+		Meta:     r.Meta,
 	}
 }

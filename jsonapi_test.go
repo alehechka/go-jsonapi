@@ -443,7 +443,13 @@ func TestCreateResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := json.MarshalIndent(jsonapi.CreateResponse(tt.args.data, tt.args.included, tt.args.errors, tt.args.links, tt.args.meta, "https://example.com"), "", "\t")
+			got, err := json.MarshalIndent(jsonapi.CreateResponse(jsonapi.Response{
+				Data:     tt.args.data,
+				Included: tt.args.included,
+				Errors:   tt.args.errors,
+				Links:    tt.args.links,
+				Meta:     tt.args.meta,
+			}, "https://example.com"), "", "\t")
 			if err != nil {
 				t.Errorf("CreateResponse() error %v", err)
 				return
