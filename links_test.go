@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/alehechka/go-jsonapi"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTransformLinks(t *testing.T) {
