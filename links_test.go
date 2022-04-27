@@ -216,20 +216,20 @@ func TestCreatePrevLinkFromCursorPaginationResponse(t *testing.T) {
 	assert.Equal(t, true, isLink)
 }
 
-func TestCreatePrevLinkFromCursorPaginationResponse_NilAfter(t *testing.T) {
+func TestCreatePrevLinkFromCursorPaginationResponse_NilBefore(t *testing.T) {
 	path := "/example"
 	num := 10
 	link, key, isLink := jsonapi.CreatePrevLinkFromCursorPaginationResponse(path, jsonapi.Params{"id": num}, num, nil)
 
 	transformed := jsonapi.TransformLink(link, "https://example.com")
 
-	assert.Equal(t, path, link.Href)
-	assert.Equal(t, "https://example.com/example?page[size]=10", transformed)
-	assert.Equal(t, num, link.Params["id"])
-	assert.Equal(t, num, link.Queries[jsonapi.PageSize])
+	assert.Equal(t, "", link.Href)
+	assert.Equal(t, "https://example.com", transformed)
+	assert.Equal(t, nil, link.Params["id"])
+	assert.Equal(t, nil, link.Queries[jsonapi.PageSize])
 	assert.Equal(t, nil, link.Queries[jsonapi.PageBefore])
-	assert.Equal(t, "prev", key)
-	assert.Equal(t, true, isLink)
+	assert.Equal(t, "", key)
+	assert.Equal(t, false, isLink)
 }
 
 func TestCreatePrevLinkFromCursorPaginationResponse_EmptyString(t *testing.T) {
