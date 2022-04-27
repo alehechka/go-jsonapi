@@ -18,9 +18,9 @@ func Test_AppendGeneratedSelfLink(t *testing.T) {
 		Href: "http://localhost:8080/example?id=123",
 	}
 
-	assert.Equal(t, len(links), 1)
+	assert.Equal(t, 1, len(links))
 	assert.NotNil(t, links["self"])
-	assert.Equal(t, links["self"], expectedLink)
+	assert.Equal(t, expectedLink, links["self"])
 }
 
 func Test_CreateBaseURL_Proxied(t *testing.T) {
@@ -33,8 +33,8 @@ func Test_CreateBaseURL_Proxied(t *testing.T) {
 
 	baseURL, path := jsonapi.CreateBaseURL(req)
 
-	assert.Equal(t, baseURL, "https://example.com/rest")
-	assert.Equal(t, path, "/example")
+	assert.Equal(t, "https://example.com/rest", baseURL)
+	assert.Equal(t, "/example", path)
 }
 
 func Test_createBaseURL_Raw(t *testing.T) {
@@ -42,8 +42,8 @@ func Test_createBaseURL_Raw(t *testing.T) {
 
 	baseURL, path := jsonapi.CreateBaseURL(req)
 
-	assert.Equal(t, baseURL, "https://example.com")
-	assert.Equal(t, path, "/example")
+	assert.Equal(t, "https://example.com", baseURL)
+	assert.Equal(t, "/example", path)
 }
 
 func Test_createBaseURL_Localhost(t *testing.T) {
@@ -51,6 +51,16 @@ func Test_createBaseURL_Localhost(t *testing.T) {
 
 	baseURL, path := jsonapi.CreateBaseURL(req)
 
-	assert.Equal(t, baseURL, "http://localhost:8080")
-	assert.Equal(t, path, "/example")
+	assert.Equal(t, "http://localhost:8080", baseURL)
+	assert.Equal(t, "/example", path)
+}
+
+func Test_createBaseURL_NoScheme(t *testing.T) {
+	req := httptest.NewRequest("GET", "http://localhost:8080/example", nil)
+	req.URL.Scheme = ""
+
+	baseURL, path := jsonapi.CreateBaseURL(req)
+
+	assert.Equal(t, "http://localhost:8080", baseURL)
+	assert.Equal(t, "/example", path)
 }
