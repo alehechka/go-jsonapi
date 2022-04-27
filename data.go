@@ -48,7 +48,7 @@ func transformToInternalDataStruct(d Data, baseURL string) internalData {
 		ID:            d.ID(),
 		Datatype:      d.Type(),
 		Attributes:    d.Attributes(),
-		Links:         transformLinks(d.Links(), baseURL),
+		Links:         TransformLinks(d.Links(), baseURL),
 		Meta:          d.Meta(),
 		Relationships: transformToInternalRelationships(d, baseURL),
 	}

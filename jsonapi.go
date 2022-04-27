@@ -25,7 +25,7 @@ func CreateResponse(data, included []Data, errors []Error, links Links, meta int
 		Data:     transformToInternalDataStructs(data, baseURL),
 		Included: transformToInternalDataStructArray(included, baseURL),
 		Errors:   transformToInternalErrorStructs(errors, baseURL),
-		Links:    transformLinks(links, baseURL),
+		Links:    TransformLinks(links, baseURL),
 		Meta:     meta,
 	}
 }

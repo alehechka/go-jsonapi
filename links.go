@@ -34,17 +34,17 @@ type Links map[string]Link
 // LinkMap should have values of type JsonAPILink or string
 type LinkMap map[string]interface{} // JsonAPILink | string
 
-func transformLinks(jsonLinks Links, baseURL string) LinkMap {
+func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 	links := make(LinkMap)
 
 	for key, jsonLink := range jsonLinks {
-		links[key] = transformLink(jsonLink, baseURL)
+		links[key] = TransformLink(jsonLink, baseURL)
 	}
 
 	return links
 }
 
-func transformLink(jsonLink Link, baseURL string) (link interface{}) {
+func TransformLink(jsonLink Link, baseURL string) (link interface{}) {
 
 	jsonLink = appendBaseURL(jsonLink, baseURL)
 
@@ -95,6 +95,9 @@ func appendQueryParams(link Link) Link {
 
 	q := u.Query()
 	for key, value := range link.Queries {
+		if v, ok := value.(string); ok && len(v) == 0 {
+			continue
+		}
 		q.Set(key, fmt.Sprintf("%v", value))
 	}
 	u.RawQuery, _ = url.QueryUnescape(q.Encode())
@@ -124,9 +127,9 @@ func IsRelativeURL(str string) bool {
 	return err == nil && u.Scheme == ""
 }
 
-// CreateNextLinksFromPaginationResponse creates a Links map for next pagination step (using PageOffset/PageLimit)
-func CreateNextLinksFromPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) Links {
-	link, key, isLink := CreateNextLinkFromPaginationResponse(href, params, moreResultsAvailable, pageOffset, pageLimit)
+// CreateNextLinksFromOffsetPaginationResponse creates a Links map for next pagination step (using PageOffset/PageLimit)
+func CreateNextLinksFromOffsetPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) Links {
+	link, key, isLink := CreateNextLinkFromOffsetPaginationResponse(href, params, moreResultsAvailable, pageOffset, pageLimit)
 
 	links := make(Links)
 
@@ -137,20 +140,54 @@ func CreateNextLinksFromPaginationResponse(href string, params Params, moreResul
 	return links
 }
 
-// CreateNextLinkFromPaginationResponse creates a Link object for next pagination step (using PageOffset/PageLimit)
-func CreateNextLinkFromPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) (link Link, key string, isLink bool) {
-	next := "next"
-
-	if moreResultsAvailable == true {
-		return Link{
-			Href:   href,
-			Params: params,
-			Queries: Queries{
-				PageOffset.String(): pageOffset,
-				PageLimit.String():  pageLimit,
-			},
-		}, next, true
+// CreateNextLinkFromOffsetPaginationResponse creates a Link object for next pagination step (using PageOffset/PageLimit)
+func CreateNextLinkFromOffsetPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) (link Link, key string, isLink bool) {
+	if moreResultsAvailable == false {
+		return
 	}
 
-	return Link{}, next, false
+	return Link{
+		Href:   href,
+		Params: params,
+		Queries: Queries{
+			PageOffset: pageOffset,
+			PageLimit:  pageLimit,
+		},
+	}, "next", true
+}
+
+// CreateNextLinksFromCursorPaginationResponse creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
+func CreateNextLinksFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) Links {
+	link, key, isLink := CreateNextLinkFromCursorPaginationResponse(href, params, size, before, after)
+
+	links := make(Links)
+
+	if isLink {
+		links[key] = link
+	}
+
+	return links
+}
+
+// CreateNextLinkFromCursorPaginationResponse creates a Link object for next pagination step (using PageSize/PageBefore/PageAfter)
+func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) (link Link, key string, isLink bool) {
+	if before == nil && after == nil {
+		return
+	}
+
+	queries := Queries{PageSize: size}
+
+	if before != nil {
+		queries[PageBefore] = *before
+	}
+
+	if after != nil {
+		queries[PageAfter] = *after
+	}
+
+	return Link{
+		Href:    href,
+		Params:  params,
+		Queries: queries,
+	}, "next", true
 }

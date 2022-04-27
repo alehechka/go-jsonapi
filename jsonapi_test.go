@@ -1,31 +1,33 @@
-package jsonapi
+package jsonapi_test
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
+
+	"github.com/alehechka/go-jsonapi"
 )
 
-type SomeRelatedAgilityData struct {
+type SomeRelatedData struct {
 	CustomerID string `json:"customerId"`
 }
 
-func (d SomeRelatedAgilityData) ID() string {
+func (d SomeRelatedData) ID() string {
 	return d.CustomerID
 }
-func (d SomeRelatedAgilityData) Type() string {
+func (d SomeRelatedData) Type() string {
 	return "relatedData"
 }
-func (d SomeRelatedAgilityData) Meta() interface{} {
+func (d SomeRelatedData) Meta() interface{} {
 	return nil
 }
 
-type AgilityDataRelationship struct {
+type DataRelationship struct {
 	ID string `json:"id"`
 }
 
-func (d AgilityDataRelationship) Links() Links {
-	return Links{
+func (d DataRelationship) Links() jsonapi.Links {
+	return jsonapi.Links{
 		"resource": {
 			Href: "/path/to/resource/:id",
 			Params: map[string]interface{}{
@@ -35,48 +37,48 @@ func (d AgilityDataRelationship) Links() Links {
 	}
 }
 
-func (d AgilityDataRelationship) Data() ([]ResourceIdentifier, bool) {
-	arr := make([]ResourceIdentifier, 1)
+func (d DataRelationship) Data() ([]jsonapi.ResourceIdentifier, bool) {
+	arr := make([]jsonapi.ResourceIdentifier, 1)
 
-	arr[0] = SomeRelatedAgilityData{
+	arr[0] = SomeRelatedData{
 		CustomerID: "cust1234",
 	}
 
 	return arr, false
 }
 
-func (d AgilityDataRelationship) Meta() interface{} {
+func (d DataRelationship) Meta() interface{} {
 	return nil
 }
 
-type SomeAgilityData struct {
+type SomeData struct {
 	Name     string `json:"name"`
 	TranID   string `json:"tranId"`
 	ShipTo   string `json:"shipTo"`
 	ItemName string `json:"itemName"`
 }
 
-func (d SomeAgilityData) ID() string {
+func (d SomeData) ID() string {
 	return d.TranID
 }
 
-func (d SomeAgilityData) Type() string {
-	return "agilityData"
+func (d SomeData) Type() string {
+	return "Data"
 }
 
-func (d SomeAgilityData) Attributes() interface{} {
+func (d SomeData) Attributes() interface{} {
 	return d
 }
 
 // TODO Add an example here
-func (d SomeAgilityData) Links() Links {
+func (d SomeData) Links() jsonapi.Links {
 	return nil
 }
 
-func (d SomeAgilityData) Relationships() map[string]Relationship {
+func (d SomeData) Relationships() map[string]jsonapi.Relationship {
 	if d.TranID == "1111" {
-		return map[string]Relationship{
-			"relatedData": AgilityDataRelationship{
+		return map[string]jsonapi.Relationship{
+			"relatedData": DataRelationship{
 				ID: d.TranID,
 			},
 		}
@@ -85,17 +87,17 @@ func (d SomeAgilityData) Relationships() map[string]Relationship {
 	return nil
 }
 
-func (d SomeAgilityData) Meta() interface{} {
+func (d SomeData) Meta() interface{} {
 	return nil
 }
 
 func TestCreateResponse(t *testing.T) {
 
 	type args struct {
-		data     []Data
-		included []Data
-		errors   []Error
-		links    Links
+		data     []jsonapi.Data
+		included []jsonapi.Data
+		errors   []jsonapi.Error
+		links    jsonapi.Links
 		meta     interface{}
 	}
 
@@ -107,8 +109,8 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
@@ -122,7 +124,7 @@ func TestCreateResponse(t *testing.T) {
 			want: `{
 	"data": {
 		"id": "12345",
-		"type": "agilityData",
+		"type": "Data",
 		"attributes": {
 			"name": "Testing data 1",
 			"tranId": "12345",
@@ -135,8 +137,8 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item relationship",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "1111",
 						ShipTo:   "Location 1",
@@ -150,7 +152,7 @@ func TestCreateResponse(t *testing.T) {
 			want: `{
 	"data": {
 		"id": "1111",
-		"type": "agilityData",
+		"type": "Data",
 		"attributes": {
 			"name": "Testing data 1",
 			"tranId": "1111",
@@ -174,14 +176,14 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
 						ItemName: "Box-o-shingles",
 					},
-					SomeAgilityData{
+					SomeData{
 						Name:     "Testing data 2",
 						TranID:   "12346",
 						ShipTo:   "Location 2",
@@ -196,7 +198,7 @@ func TestCreateResponse(t *testing.T) {
 	"data": [
 		{
 			"id": "12345",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 1",
 				"tranId": "12345",
@@ -206,7 +208,7 @@ func TestCreateResponse(t *testing.T) {
 		},
 		{
 			"id": "12346",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 2",
 				"tranId": "12346",
@@ -220,22 +222,22 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values and included",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
 						ItemName: "Box-o-shingles",
 					},
-					SomeAgilityData{
+					SomeData{
 						Name:     "Testing data 2",
 						TranID:   "12346",
 						ShipTo:   "Location 2",
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: []Data{
-					SomeAgilityData{
+				included: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
@@ -249,7 +251,7 @@ func TestCreateResponse(t *testing.T) {
 	"data": [
 		{
 			"id": "12345",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 1",
 				"tranId": "12345",
@@ -259,7 +261,7 @@ func TestCreateResponse(t *testing.T) {
 		},
 		{
 			"id": "12346",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 2",
 				"tranId": "12346",
@@ -271,7 +273,7 @@ func TestCreateResponse(t *testing.T) {
 	"included": [
 		{
 			"id": "12345",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 1",
 				"tranId": "12345",
@@ -285,14 +287,14 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values and links",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
 						ItemName: "Box-o-shingles",
 					},
-					SomeAgilityData{
+					SomeData{
 						Name:     "Testing data 2",
 						TranID:   "12346",
 						ShipTo:   "Location 2",
@@ -300,12 +302,12 @@ func TestCreateResponse(t *testing.T) {
 					},
 				},
 				included: nil,
-				links: Links{
+				links: jsonapi.Links{
 					"self": {
-						Href: "/api/rest/someAgilityData",
+						Href: "/api/rest/someData",
 					},
 					"other": {
-						Href: "/api/rest/someOtherAgilityData",
+						Href: "/api/rest/someOtherData",
 						Meta: map[string]interface{}{
 							"count": 10,
 						},
@@ -314,13 +316,13 @@ func TestCreateResponse(t *testing.T) {
 						},
 					},
 					"else": {
-						Href: "/api/rest/elseAgilityData/:id",
+						Href: "/api/rest/elseData/:id",
 						Params: map[string]interface{}{
 							"id": 2,
 						},
 					},
 					"with-protocol": {
-						Href: "http://www.dmsi.com/api/rest/with-protocol",
+						Href: "http://www.example.com/api/rest/with-protocol",
 					},
 				},
 				meta: nil,
@@ -329,7 +331,7 @@ func TestCreateResponse(t *testing.T) {
 	"data": [
 		{
 			"id": "12345",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 1",
 				"tranId": "12345",
@@ -339,7 +341,7 @@ func TestCreateResponse(t *testing.T) {
 		},
 		{
 			"id": "12346",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 2",
 				"tranId": "12346",
@@ -349,29 +351,29 @@ func TestCreateResponse(t *testing.T) {
 		}
 	],
 	"links": {
-		"else": "https://example.com/api/rest/elseAgilityData/2",
+		"else": "https://example.com/api/rest/elseData/2",
 		"other": {
-			"href": "https://example.com/api/rest/someOtherAgilityData",
+			"href": "https://example.com/api/rest/someOtherData",
 			"meta": {
 				"count": 10
 			}
 		},
-		"self": "https://example.com/api/rest/someAgilityData",
-		"with-protocol": "http://www.dmsi.com/api/rest/with-protocol"
+		"self": "https://example.com/api/rest/someData",
+		"with-protocol": "http://www.example.com/api/rest/with-protocol"
 	}
 }`,
 		},
 		{
 			name: "Response test with multiple data values and links",
 			args: args{
-				data: []Data{
-					SomeAgilityData{
+				data: []jsonapi.Data{
+					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
 						ShipTo:   "Location 1",
 						ItemName: "Box-o-shingles",
 					},
-					SomeAgilityData{
+					SomeData{
 						Name:     "Testing data 2",
 						TranID:   "12346",
 						ShipTo:   "Location 2",
@@ -390,7 +392,7 @@ func TestCreateResponse(t *testing.T) {
 	"data": [
 		{
 			"id": "12345",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 1",
 				"tranId": "12345",
@@ -400,7 +402,7 @@ func TestCreateResponse(t *testing.T) {
 		},
 		{
 			"id": "12346",
-			"type": "agilityData",
+			"type": "Data",
 			"attributes": {
 				"name": "Testing data 2",
 				"tranId": "12346",
@@ -417,7 +419,7 @@ func TestCreateResponse(t *testing.T) {
 		{
 			name: "Error Response test with a single error",
 			args: args{
-				errors: []Error{
+				errors: []jsonapi.Error{
 					{
 						ID:     "12345",
 						Status: 500,
@@ -441,7 +443,7 @@ func TestCreateResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := json.MarshalIndent(CreateResponse(tt.args.data, tt.args.included, tt.args.errors, tt.args.links, tt.args.meta, "https://example.com"), "", "\t")
+			got, err := json.MarshalIndent(jsonapi.CreateResponse(tt.args.data, tt.args.included, tt.args.errors, tt.args.links, tt.args.meta, "https://example.com"), "", "\t")
 			if err != nil {
 				t.Errorf("CreateResponse() error %v", err)
 				return

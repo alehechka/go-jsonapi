@@ -41,7 +41,7 @@ func transformToInternalRelationships(d Data, baseURL string) map[string]interna
 func transformToInternalRelationship(r Relationship, baseURL string) internalRelationship {
 
 	return internalRelationship{
-		Links: transformLinks(r.Links(), baseURL),
+		Links: TransformLinks(r.Links(), baseURL),
 		Meta:  r.Meta(),
 		Data:  transformToInternalRelationshipData(r, baseURL),
 	}

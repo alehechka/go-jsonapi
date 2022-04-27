@@ -1,10 +1,5 @@
 package jsonapi
 
-import (
-	"github.com/dmsi-io/go-logger"
-	"github.com/dmsi-io/go-utils/errorshared"
-)
-
 //ErrorSource is the standard JSONAPI Error Source struct
 type ErrorSource struct {
 	Pointer   string `json:"pointer,omitempty"`
@@ -47,7 +42,7 @@ func transformToInternalErrorStructs(errs []Error, baseURL string) []internalErr
 func transformToInternalErrorStruct(err Error, baseURL string) internalError {
 	return internalError{
 		ID:     err.ID,
-		Links:  transformLinks(err.Links, baseURL),
+		Links:  TransformLinks(err.Links, baseURL),
 		Status: err.Status,
 		Code:   err.Code,
 		Title:  err.Title,
@@ -55,33 +50,4 @@ func transformToInternalErrorStruct(err Error, baseURL string) internalError {
 		Source: err.Source,
 		Meta:   err.Meta,
 	}
-}
-
-// CreateErrorsFromResponse creates an array of Error objects from provided RootResponse
-func CreateErrorsFromResponse(statusCode int, returnCode int, messageNum int, messageText string, log logger.LogInterface) (errs []Error) {
-	err, isError := CreateErrorFromResponse(statusCode, returnCode, messageNum, messageText, log)
-
-	if isError {
-		return []Error{err}
-	}
-
-	return make([]Error, 0)
-}
-
-// CreateErrorFromResponse creates an Error object from provided RootResponse
-func CreateErrorFromResponse(statusCode int, returnCode int, messageNum int, messageText string, log logger.LogInterface) (err Error, isError bool) {
-
-	if returnCode != 0 {
-		if log != nil {
-			log.Error(messageText)
-		}
-		return Error{
-			Status: statusCode,
-			Code:   messageNum,
-			Title:  errorshared.GetErrorTitleFromInt(messageNum),
-			Detail: messageText,
-		}, true
-	}
-
-	return Error{}, false
 }
