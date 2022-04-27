@@ -156,29 +156,33 @@ func CreateNextLinkFromOffsetPaginationResponse(href string, params Params, more
 	}, "next", true
 }
 
-// CreateNextLinksFromCursorPaginationResponse creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
-func CreateNextLinksFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) Links {
-	link, key, isLink := CreateNextLinkFromCursorPaginationResponse(href, params, size, before, after)
-
+// CreateNextPrevLinksFromCursorPaginationResponse creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
+func CreateNextPrevLinksFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) Links {
 	links := make(Links)
 
-	if isLink {
+	// Next Link
+	if link, key, isLink := CreateNextLinkFromCursorPaginationResponse(href, params, size, after); isLink {
+		links[key] = link
+	}
+
+	// Previous Link
+	if link, key, isLink := CreatePrevLinkFromCursorPaginationResponse(href, params, size, before); isLink {
 		links[key] = link
 	}
 
 	return links
 }
 
-// CreateNextLinkFromCursorPaginationResponse creates a Link object for next pagination step (using PageSize/PageBefore/PageAfter)
-func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) (link Link, key string, isLink bool) {
-	if before == nil && after == nil {
+// CreateNextLinkFromCursorPaginationResponse creates a Link object for next pagination step (using PageSize/PageAfter)
+func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size int, after *string) (link Link, key string, isLink bool) {
+	if size == 0 && after == nil {
 		return
 	}
 
-	queries := Queries{PageSize: size}
+	queries := Queries{}
 
-	if before != nil {
-		queries[PageBefore] = *before
+	if size > 0 {
+		queries[PageSize] = size
 	}
 
 	if after != nil {
@@ -190,4 +194,27 @@ func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size
 		Params:  params,
 		Queries: queries,
 	}, "next", true
+}
+
+// CreatePrevLinkFromCursorPaginationResponse creates a Link object for previous pagination step (using PageSize/PageBefore)
+func CreatePrevLinkFromCursorPaginationResponse(href string, params Params, size int, before *string) (link Link, key string, isLink bool) {
+	if before == nil {
+		return
+	}
+
+	queries := Queries{}
+
+	if size > 0 {
+		queries[PageSize] = size
+	}
+
+	if before != nil {
+		queries[PageBefore] = *before
+	}
+
+	return Link{
+		Href:    href,
+		Params:  params,
+		Queries: queries,
+	}, "prev", true
 }

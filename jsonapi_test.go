@@ -432,9 +432,7 @@ func TestCreateResponse(t *testing.T) {
 	"errors": [
 		{
 			"id": "12345",
-			"status": 500,
-			"code": 0,
-			"title": ""
+			"status": 500
 		}
 	]
 }`,
