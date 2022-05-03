@@ -33,14 +33,16 @@ func (included Included) HasResource(resource string) bool {
 }
 
 var (
-	TooManyIncludedError error = errors.New("included query has too many resources")
-	ResourceNotAvailable error = errors.New("resource from included query not available")
+	// ErrTooManyIncluded number of included is greater than number of available resources
+	ErrTooManyIncluded error = errors.New("included query has too many resources")
+	// ErrResourceNotAvailable member of included is not an available resource
+	ErrResourceNotAvailable error = errors.New("resource from included query not available")
 )
 
 // VerifyResources verifies that all requested included members exist in available resources
 func (included Included) VerifyResources(resources ...string) error {
 	if len(included) > len(resources) {
-		return TooManyIncludedError
+		return ErrTooManyIncluded
 	}
 
 	resourceMap := make(map[string]bool)
@@ -50,7 +52,7 @@ func (included Included) VerifyResources(resources ...string) error {
 
 	for _, include := range included {
 		if ok, exists := resourceMap[include]; !ok || !exists {
-			return ResourceNotAvailable
+			return ErrResourceNotAvailable
 		}
 	}
 

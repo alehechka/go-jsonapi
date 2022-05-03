@@ -64,7 +64,7 @@ func Test_VerifyResources_TooManyIncluded(t *testing.T) {
 	err := included.VerifyResources("resource1")
 
 	assert.NotNil(t, err)
-	assert.Equal(t, jsonapi.TooManyIncludedError, err)
+	assert.Equal(t, jsonapi.ErrTooManyIncluded, err)
 }
 
 func Test_VerifyResources_ResourceNotAvailable(t *testing.T) {
@@ -73,5 +73,5 @@ func Test_VerifyResources_ResourceNotAvailable(t *testing.T) {
 	err := included.VerifyResources("resource1", "resource3")
 
 	assert.NotNil(t, err)
-	assert.Equal(t, jsonapi.ResourceNotAvailable, err)
+	assert.Equal(t, jsonapi.ErrResourceNotAvailable, err)
 }
