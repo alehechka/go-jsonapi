@@ -1,9 +1,8 @@
 package jsonapi
 
 import (
-	"errors"
 	"net/http"
-	"strings"
+	"strconv"
 )
 
 // Pagination Query Parameters
@@ -26,53 +25,41 @@ const (
 	Include string = "include"
 )
 
-// Included string array representing the included query parameter resources
-type Included []string
-
-// GetIncluded extracts included object names from request query parameters
-func GetIncluded(request *http.Request) (included Included) {
-	includedQuery := request.URL.Query().Get(Include)
-
-	if len(includedQuery) == 0 {
-		return
-	}
-
-	included = strings.Split(request.URL.Query().Get(Include), ",")
-	return
+// GetPageOffset retrieves integer parsed PageOffset from query parameters
+func GetPageOffset(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageOffset)
 }
 
-// HasResource will check the provided included array for the requested resource name
-func (included Included) HasResource(resource string) bool {
-	for _, include := range included {
-		if include == resource {
-			return true
-		}
-	}
-
-	return false
+// GetPageLimit retrieves integer parsed PageOffset from query parameters
+func GetPageLimit(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageLimit)
 }
 
-var (
-	TooManyIncludedError error = errors.New("included query has too many resources")
-	ResourceNotAvailable error = errors.New("resource from included query not available")
-)
+// GetPageNumber retrieves integer parsed PageOffset from query parameters
+func GetPageNumber(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageNumber)
+}
 
-// VerifyResources verifies that all requested included members exist in available resources
-func (included Included) VerifyResources(resources ...string) error {
-	if len(included) > len(resources) {
-		return TooManyIncludedError
-	}
+// GetPageSize retrieves integer parsed PageOffset from query parameters
+func GetPageSize(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageSize)
+}
 
-	resourceMap := make(map[string]bool)
-	for _, resource := range resources {
-		resourceMap[resource] = true
-	}
+// GetPageCursor retrieves integer parsed PageOffset from query parameters
+func GetPageCursor(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageCursor)
+}
 
-	for _, include := range included {
-		if ok, exists := resourceMap[include]; !ok || !exists {
-			return ResourceNotAvailable
-		}
-	}
+// GetPageBefore retrieves integer parsed PageOffset from query parameters
+func GetPageBefore(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageBefore)
+}
 
-	return nil
+// GetPageAfter retrieves integer parsed PageOffset from query parameters
+func GetPageAfter(request *http.Request) (int, error) {
+	return getQueryInteger(request, PageAfter)
+}
+
+func getQueryInteger(request *http.Request, query string) (int, error) {
+	return strconv.Atoi(request.URL.Query().Get(query))
 }
