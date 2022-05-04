@@ -1,12 +1,12 @@
 package jsonapi
 
-//ErrorSource is the standard JSONAPI Error Source struct
+// ErrorSource is the standard JSONAPI Error Source struct
 type ErrorSource struct {
 	Pointer   string `json:"pointer,omitempty"`
 	Parameter string `json:"parameter,omitempty"`
 }
 
-//Error is the standard JSONAPI Error struct
+// Error is the standard JSONAPI Error struct
 type Error struct {
 	ID     string      `json:"id,omitempty"`
 	Links  Links       `json:"links,omitempty"`
@@ -16,6 +16,15 @@ type Error struct {
 	Detail string      `json:"detail,omitempty"`
 	Source interface{} `json:"source,omitempty"` // ErrorSource
 	Meta   interface{} `json:"meta,omitempty"`
+}
+
+// Errors is a standard array of JSONAPI Error structs
+type Errors []Error
+
+// HasErrors checks if Errors array has one more errors.
+// data key cannot coexist in response with errors: https://jsonapi.org/format/#document-top-level
+func (errs Errors) HasErrors() bool {
+	return len(errs) > 0
 }
 
 type internalError struct {

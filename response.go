@@ -7,13 +7,23 @@ import (
 	"strings"
 )
 
-// CreateJSONAPIResponse is a wrapper to jsonapi.CreateResponse that will create the baseURL parameters from *http.Request
-func CreateJSONAPIResponse(request *http.Request) func(r Response) TransformedResponse {
+// CreateResponse is a wrapper to TransformResponse that will create the baseURL parameters from *http.Request
+func CreateResponse(request *http.Request) func(r Response) TransformedResponse {
 	return func(r Response) TransformedResponse {
 		baseURL, path := CreateBaseURL(request)
 		r.Links = AppendGeneratedSelfLink(request)(r.Links, baseURL, path)
 
-		return CreateResponse(r, baseURL)
+		return TransformResponse(r, baseURL)
+	}
+}
+
+// CreateCollectionResponse is a wrapper to TransformCollectionResponse that will create the baseURL parameters from *http.Request
+func CreateCollectionResponse(request *http.Request) func(r CollectionResponse) TransformedResponse {
+	return func(r CollectionResponse) TransformedResponse {
+		baseURL, path := CreateBaseURL(request)
+		r.Links = AppendGeneratedSelfLink(request)(r.Links, baseURL, path)
+
+		return TransformCollectionResponse(r, baseURL)
 	}
 }
 

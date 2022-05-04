@@ -11,13 +11,23 @@ package jsonapi
 
 // Response is the standard JSONAPI Response struct
 type Response struct {
-	Data     []Data
+	Data     Data
 	Included []Data
-	Errors   []Error
+	Errors   Errors
 	Links    Links
 	Meta     interface{}
 }
 
+// CollectionResponse is the standard JSONAPI collection Response struct
+type CollectionResponse struct {
+	Data     []Data
+	Included []Data
+	Errors   Errors
+	Links    Links
+	Meta     interface{}
+}
+
+// TransformedResponse is the resulting Data struct after transforming via TransformResponse/TransformCollectionResponse
 type TransformedResponse struct {
 	Data     interface{}     `json:"data,omitempty"` // Data | []Data
 	Errors   []internalError `json:"errors,omitempty"`
@@ -26,12 +36,26 @@ type TransformedResponse struct {
 	Meta     interface{}     `json:"meta,omitempty"`
 }
 
-// CreateResponse transforms provided parameters into standardized JSONAPI format
-func CreateResponse(r Response, baseURL string) TransformedResponse {
+// TransformResponse transforms provided parameters into standardized JSONAPI format
+func TransformResponse(r Response, baseURL string) TransformedResponse {
+	data := transformData(r, baseURL)
 
 	return TransformedResponse{
-		Data:     transformToInternalDataStructs(r.Data, baseURL),
-		Included: transformToInternalDataStructArray(r.Included, baseURL),
+		Data:     data,
+		Included: transformIncluded(r.Included, data, baseURL),
+		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Links:    TransformLinks(r.Links, baseURL),
+		Meta:     r.Meta,
+	}
+}
+
+// TransformCollectionResponse transforms provided parameters into standardized collection JSONAPI format
+func TransformCollectionResponse(r CollectionResponse, baseURL string) TransformedResponse {
+	data := transformData(r, baseURL)
+
+	return TransformedResponse{
+		Data:     data,
+		Included: transformIncluded(r.Included, data, baseURL),
 		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,

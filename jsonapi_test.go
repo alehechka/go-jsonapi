@@ -91,7 +91,109 @@ func (d SomeData) Meta() interface{} {
 	return nil
 }
 
-func TestCreateResponse(t *testing.T) {
+func TestTransformResponse(t *testing.T) {
+
+	type args struct {
+		data     jsonapi.Data
+		included []jsonapi.Data
+		errors   []jsonapi.Error
+		links    jsonapi.Links
+		meta     interface{}
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Response test with a single data item",
+			args: args{
+				data: SomeData{
+					Name:     "Testing data 1",
+					TranID:   "12345",
+					ShipTo:   "Location 1",
+					ItemName: "Box-o-shingles",
+				},
+				included: nil,
+				links:    nil,
+				meta:     nil,
+			},
+			want: `{
+	"data": {
+		"id": "12345",
+		"type": "Data",
+		"attributes": {
+			"name": "Testing data 1",
+			"tranId": "12345",
+			"shipTo": "Location 1",
+			"itemName": "Box-o-shingles"
+		}
+	}
+}`,
+		},
+		{
+			name: "Response test with a single data item relationship",
+			args: args{
+				data: SomeData{
+					Name:     "Testing data 1",
+					TranID:   "1111",
+					ShipTo:   "Location 1",
+					ItemName: "Box-o-shingles",
+				},
+				included: nil,
+				links:    nil,
+				meta:     nil,
+			},
+			want: `{
+	"data": {
+		"id": "1111",
+		"type": "Data",
+		"attributes": {
+			"name": "Testing data 1",
+			"tranId": "1111",
+			"shipTo": "Location 1",
+			"itemName": "Box-o-shingles"
+		},
+		"relationships": {
+			"relatedData": {
+				"links": {
+					"resource": "https://example.com/path/to/resource/1111"
+				},
+				"data": {
+					"id": "cust1234",
+					"type": "relatedData"
+				}
+			}
+		}
+	}
+}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := json.MarshalIndent(jsonapi.TransformResponse(jsonapi.Response{
+				Data:     tt.args.data,
+				Included: tt.args.included,
+				Errors:   tt.args.errors,
+				Links:    tt.args.links,
+				Meta:     tt.args.meta,
+			}, "https://example.com"), "", "\t")
+			if err != nil {
+				t.Errorf("TransformResponse() error %v", err)
+				return
+			}
+
+			if !reflect.DeepEqual(string(got), tt.want) {
+				t.Errorf("TransformResponse() = \n%v, want \n%v", string(got), tt.want)
+			}
+
+		})
+	}
+}
+
+func TestTransformCollectionResponse(t *testing.T) {
 
 	type args struct {
 		data     []jsonapi.Data
@@ -122,16 +224,18 @@ func TestCreateResponse(t *testing.T) {
 				meta:     nil,
 			},
 			want: `{
-	"data": {
-		"id": "12345",
-		"type": "Data",
-		"attributes": {
-			"name": "Testing data 1",
-			"tranId": "12345",
-			"shipTo": "Location 1",
-			"itemName": "Box-o-shingles"
+	"data": [
+		{
+			"id": "12345",
+			"type": "Data",
+			"attributes": {
+				"name": "Testing data 1",
+				"tranId": "12345",
+				"shipTo": "Location 1",
+				"itemName": "Box-o-shingles"
+			}
 		}
-	}
+	]
 }`,
 		},
 		{
@@ -150,27 +254,29 @@ func TestCreateResponse(t *testing.T) {
 				meta:     nil,
 			},
 			want: `{
-	"data": {
-		"id": "1111",
-		"type": "Data",
-		"attributes": {
-			"name": "Testing data 1",
-			"tranId": "1111",
-			"shipTo": "Location 1",
-			"itemName": "Box-o-shingles"
-		},
-		"relationships": {
-			"relatedData": {
-				"links": {
-					"resource": "https://example.com/path/to/resource/1111"
-				},
-				"data": {
-					"id": "cust1234",
-					"type": "relatedData"
+	"data": [
+		{
+			"id": "1111",
+			"type": "Data",
+			"attributes": {
+				"name": "Testing data 1",
+				"tranId": "1111",
+				"shipTo": "Location 1",
+				"itemName": "Box-o-shingles"
+			},
+			"relationships": {
+				"relatedData": {
+					"links": {
+						"resource": "https://example.com/path/to/resource/1111"
+					},
+					"data": {
+						"id": "cust1234",
+						"type": "relatedData"
+					}
 				}
 			}
 		}
-	}
+	]
 }`,
 		},
 		{
@@ -441,7 +547,7 @@ func TestCreateResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := json.MarshalIndent(jsonapi.CreateResponse(jsonapi.Response{
+			got, err := json.MarshalIndent(jsonapi.TransformCollectionResponse(jsonapi.CollectionResponse{
 				Data:     tt.args.data,
 				Included: tt.args.included,
 				Errors:   tt.args.errors,
@@ -449,12 +555,12 @@ func TestCreateResponse(t *testing.T) {
 				Meta:     tt.args.meta,
 			}, "https://example.com"), "", "\t")
 			if err != nil {
-				t.Errorf("CreateResponse() error %v", err)
+				t.Errorf("TransformCollectionResponse() error %v", err)
 				return
 			}
 
 			if !reflect.DeepEqual(string(got), tt.want) {
-				t.Errorf("CreateResponse() = \n%v, want \n%v", string(got), tt.want)
+				t.Errorf("TransformCollectionResponse() = \n%v, want \n%v", string(got), tt.want)
 			}
 
 		})
