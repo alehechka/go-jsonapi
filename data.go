@@ -41,22 +41,18 @@ func transformToInternalDataStruct(d Data, baseURL string) internalData {
 	}
 }
 
-func transformData(r interface{}, baseURL string) interface{} {
-
-	switch response := r.(type) {
-	case Response:
-		if response.Errors.HasErrors() {
-			return nil
-		}
-		return transformToInternalDataStruct(response.Data, baseURL)
-	case CollectionResponse:
-		if response.Errors.HasErrors() {
-			return nil
-		}
-		return transformToInternalDataStructArray(response.Data, baseURL)
+func transformResponseData(response Response, baseURL string) interface{} {
+	if response.Errors.HasErrors() {
+		return nil
 	}
+	return transformToInternalDataStruct(response.Data, baseURL)
+}
 
-	return nil
+func transformCollectionResponseData(response CollectionResponse, baseURL string) interface{} {
+	if response.Errors.HasErrors() {
+		return nil
+	}
+	return transformToInternalDataStructArray(response.Data, baseURL)
 }
 
 func transformIncluded(includedData []Data, data interface{}, baseURL string) (included []internalData) {
