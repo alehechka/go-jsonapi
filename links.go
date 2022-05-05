@@ -127,9 +127,9 @@ func IsRelativeURL(str string) bool {
 	return err == nil && u.Scheme == ""
 }
 
-// CreateNextLinksFromOffsetPaginationResponse creates a Links map for next pagination step (using PageOffset/PageLimit)
-func CreateNextLinksFromOffsetPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) Links {
-	link, key, isLink := CreateNextLinkFromOffsetPaginationResponse(href, params, moreResultsAvailable, pageOffset, pageLimit)
+// NumberNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)
+func NumberNextLinks(href string, params Params, moreResultsAvailable bool, pageNumber int, pageSize int) Links {
+	link, key, isLink := NumberNextLink(href, params, moreResultsAvailable, pageNumber, pageSize)
 
 	links := make(Links)
 
@@ -140,8 +140,37 @@ func CreateNextLinksFromOffsetPaginationResponse(href string, params Params, mor
 	return links
 }
 
-// CreateNextLinkFromOffsetPaginationResponse creates a Link object for next pagination step (using PageOffset/PageLimit)
-func CreateNextLinkFromOffsetPaginationResponse(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) (link Link, key string, isLink bool) {
+// NumberNextLink creates a Link object for next pagination step (using PageNumber/PageSize)
+func NumberNextLink(href string, params Params, moreResultsAvailable bool, pageNumber int, pageSize int) (link Link, key string, isLink bool) {
+	if moreResultsAvailable == false {
+		return
+	}
+
+	return Link{
+		Href:   href,
+		Params: params,
+		Queries: Queries{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
+	}, "next", true
+}
+
+// OffsetNextLinks creates a Links map for next pagination step (using PageOffset/PageLimit)
+func OffsetNextLinks(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) Links {
+	link, key, isLink := OffsetNextLink(href, params, moreResultsAvailable, pageOffset, pageLimit)
+
+	links := make(Links)
+
+	if isLink {
+		links[key] = link
+	}
+
+	return links
+}
+
+// OffsetNextLink creates a Link object for next pagination step (using PageOffset/PageLimit)
+func OffsetNextLink(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) (link Link, key string, isLink bool) {
 	if moreResultsAvailable == false {
 		return
 	}
@@ -156,25 +185,25 @@ func CreateNextLinkFromOffsetPaginationResponse(href string, params Params, more
 	}, "next", true
 }
 
-// CreateNextPrevLinksFromCursorPaginationResponse creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
-func CreateNextPrevLinksFromCursorPaginationResponse(href string, params Params, size int, before *string, after *string) Links {
+// CursorNextPrevLinks creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
+func CursorNextPrevLinks(href string, params Params, size int, before *string, after *string) Links {
 	links := make(Links)
 
 	// Next Link
-	if link, key, isLink := CreateNextLinkFromCursorPaginationResponse(href, params, size, after); isLink {
+	if link, key, isLink := CursorNextLink(href, params, size, after); isLink {
 		links[key] = link
 	}
 
 	// Previous Link
-	if link, key, isLink := CreatePrevLinkFromCursorPaginationResponse(href, params, size, before); isLink {
+	if link, key, isLink := CursorPrevLink(href, params, size, before); isLink {
 		links[key] = link
 	}
 
 	return links
 }
 
-// CreateNextLinkFromCursorPaginationResponse creates a Link object for next pagination step (using PageSize/PageAfter)
-func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size int, after *string) (link Link, key string, isLink bool) {
+// CursorNextLink creates a Link object for next pagination step (using PageSize/PageAfter)
+func CursorNextLink(href string, params Params, size int, after *string) (link Link, key string, isLink bool) {
 	if size == 0 && after == nil {
 		return
 	}
@@ -196,8 +225,8 @@ func CreateNextLinkFromCursorPaginationResponse(href string, params Params, size
 	}, "next", true
 }
 
-// CreatePrevLinkFromCursorPaginationResponse creates a Link object for previous pagination step (using PageSize/PageBefore)
-func CreatePrevLinkFromCursorPaginationResponse(href string, params Params, size int, before *string) (link Link, key string, isLink bool) {
+// CursorPrevLink creates a Link object for previous pagination step (using PageSize/PageBefore)
+func CursorPrevLink(href string, params Params, size int, before *string) (link Link, key string, isLink bool) {
 	if before == nil {
 		return
 	}
