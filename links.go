@@ -2,8 +2,18 @@ package jsonapi
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+)
+
+const (
+	// NextKey represents the key for the next link
+	NextKey string = "next"
+	// PreviousKey represents the key for the previous link
+	PreviousKey string = "prev"
+	// SelfKey represents the key for the self link
+	SelfKey string = "self"
 )
 
 // Meta is a map of meta data to attach with a response.
@@ -12,8 +22,22 @@ type Meta map[string]interface{}
 // Params is a map of path parameters to substitute into a url.
 type Params map[string]interface{}
 
+// Initialize will initialize the Params map if it is nil
+func (p *Params) Initialize() {
+	if *p == nil {
+		*p = make(Params)
+	}
+}
+
 // Queries is a map of query parameters to append to a url.
 type Queries map[string]interface{}
+
+// Initialize will initialize the Queries map if it is nil
+func (q *Queries) Initialize() {
+	if *q == nil {
+		*q = make(Queries)
+	}
+}
 
 // Link is the standard JSONAPI Link object.
 // For more info: https://jsonapi.org/format/#document-links
@@ -34,6 +58,7 @@ type Links map[string]Link
 // LinkMap should have values of type JsonAPILink or string
 type LinkMap map[string]interface{} // JsonAPILink | string
 
+// TransformLinks transforms provided Links map into a JSON:API LinkMap
 func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 	links := make(LinkMap)
 
@@ -44,6 +69,7 @@ func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 	return links
 }
 
+// TransformLink transforms an individual Link into a JSON:API link object
 func TransformLink(jsonLink Link, baseURL string) (link interface{}) {
 
 	jsonLink = appendBaseURL(jsonLink, baseURL)
@@ -128,61 +154,56 @@ func IsRelativeURL(str string) bool {
 }
 
 // NumberNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)
-func NumberNextLinks(href string, params Params, moreResultsAvailable bool, pageNumber int, pageSize int) Links {
-	link, key, isLink := NumberNextLink(href, params, moreResultsAvailable, pageNumber, pageSize)
+func NumberNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool) Links {
+	return func(link Link, moreResultsAvailable bool) Links {
+		links := make(Links)
 
-	links := make(Links)
+		if moreResultsAvailable {
+			links[NextKey] = NumberNextLink(request)(link)
+		}
 
-	if isLink {
-		links[key] = link
+		return links
 	}
-
-	return links
 }
 
 // NumberNextLink creates a Link object for next pagination step (using PageNumber/PageSize)
-func NumberNextLink(href string, params Params, moreResultsAvailable bool, pageNumber int, pageSize int) (link Link, key string, isLink bool) {
-	if moreResultsAvailable == false {
-		return
-	}
+func NumberNextLink(request *http.Request) func(link Link) (nextLink Link) {
+	return func(link Link) Link {
 
-	return Link{
-		Href:   href,
-		Params: params,
-		Queries: Queries{
-			PageNumber: pageNumber,
-			PageSize:   pageSize,
-		},
-	}, "next", true
+		link.Queries.Initialize()
+		pageNumber, _ := GetPageNumber(request)
+		link.Queries[PageNumber.String()] = pageNumber + 1
+		link.Queries[PageSize.String()], _ = GetPageSize(request)
+
+		return link
+	}
 }
 
 // OffsetNextLinks creates a Links map for next pagination step (using PageOffset/PageLimit)
-func OffsetNextLinks(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) Links {
-	link, key, isLink := OffsetNextLink(href, params, moreResultsAvailable, pageOffset, pageLimit)
+func OffsetNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool) Links {
+	return func(link Link, moreResultsAvailable bool) Links {
+		links := make(Links)
 
-	links := make(Links)
+		if moreResultsAvailable {
+			links[NextKey] = OffsetNextLink(request)(link)
+		}
 
-	if isLink {
-		links[key] = link
+		return links
 	}
-
-	return links
 }
 
 // OffsetNextLink creates a Link object for next pagination step (using PageOffset/PageLimit)
-func OffsetNextLink(href string, params Params, moreResultsAvailable bool, pageOffset int, pageLimit int) (link Link, key string, isLink bool) {
-	if moreResultsAvailable == false {
-		return
-	}
+func OffsetNextLink(request *http.Request) func(link Link) (nextLink Link) {
+	return func(link Link) (nextLink Link) {
 
-	return Link{
-		Href:   href,
-		Params: params,
-		Queries: Queries{
-			PageOffset: pageOffset,
-			PageLimit:  pageLimit,
-		},
-	}, "next", true
+		link.Queries.Initialize()
+		pageOffset, _ := GetPageOffset(request)
+		pageLimit, _ := GetPageLimit(request)
+		link.Queries[PageOffset.String()] = pageOffset + pageLimit
+		link.Queries[PageLimit.String()] = pageLimit
+
+		return link
+	}
 }
 
 // CursorNextPrevLinks creates a Links map for next pagination step (using PageSize/PageBefore/PageAfter)
@@ -211,11 +232,11 @@ func CursorNextLink(href string, params Params, size int, after *string) (link L
 	queries := Queries{}
 
 	if size > 0 {
-		queries[PageSize] = size
+		queries[PageSize.String()] = size
 	}
 
 	if after != nil {
-		queries[PageAfter] = *after
+		queries[PageAfter.String()] = *after
 	}
 
 	return Link{
@@ -234,11 +255,11 @@ func CursorPrevLink(href string, params Params, size int, before *string) (link 
 	queries := Queries{}
 
 	if size > 0 {
-		queries[PageSize] = size
+		queries[PageSize.String()] = size
 	}
 
 	if before != nil {
-		queries[PageBefore] = *before
+		queries[PageBefore.String()] = *before
 	}
 
 	return Link{
