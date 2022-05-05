@@ -19,21 +19,8 @@ type internalData struct {
 	Meta          interface{}                     `json:"meta,omitempty"`
 }
 
-func transformToInternalDataStructs(data []Data, baseURL string) interface{} {
-	if len(data) == 0 {
-		return nil
-	}
-
-	if len(data) == 1 {
-		return transformToInternalDataStruct(data[0], baseURL)
-	}
-
-	return transformToInternalDataStructArray(data, baseURL)
-
-}
-
 func transformToInternalDataStructArray(data []Data, baseURL string) []internalData {
-	var internalData []internalData
+	internalData := make([]internalData, 0)
 
 	for _, d := range data {
 		internalData = append(internalData, transformToInternalDataStruct(d, baseURL))
@@ -52,4 +39,27 @@ func transformToInternalDataStruct(d Data, baseURL string) internalData {
 		Meta:          d.Meta(),
 		Relationships: transformToInternalRelationships(d, baseURL),
 	}
+}
+
+func transformResponseData(response Response, baseURL string) interface{} {
+	if response.Errors.HasErrors() {
+		return nil
+	}
+	return transformToInternalDataStruct(response.Data, baseURL)
+}
+
+func transformCollectionResponseData(response CollectionResponse, baseURL string) interface{} {
+	if response.Errors.HasErrors() {
+		return nil
+	}
+	return transformToInternalDataStructArray(response.Data, baseURL)
+}
+
+func transformIncluded(includedData []Data, data interface{}, baseURL string) (included []internalData) {
+	// included cannot exist if data does not exist: https://jsonapi.org/format/#document-top-level
+	if data == nil {
+		return
+	}
+
+	return transformToInternalDataStructArray(includedData, baseURL)
 }

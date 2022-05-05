@@ -48,17 +48,17 @@ func transformToInternalRelationship(r Relationship, baseURL string) internalRel
 }
 
 func transformToInternalRelationshipData(r Relationship, baseURL string) interface{} {
-	relationshipData, toMany := r.Data()
+	relationshipData, isToMany := r.Data()
 
 	if relationshipData == nil {
 		return nil
 	}
 
-	if len(relationshipData) == 0 && toMany {
+	if len(relationshipData) == 0 && isToMany {
 		return [0]internalResourceIdentifier{}
 	}
 
-	if len(relationshipData) == 1 {
+	if len(relationshipData) == 1 && !isToMany {
 		return internalResourceIdentifier{
 			ID:       relationshipData[0].ID(),
 			Datatype: relationshipData[0].Type(),
