@@ -82,7 +82,7 @@ func FindUnsupportedPagination(request *http.Request) func(paginationOptions ...
 			if option.QueryExists(request) {
 				errs = append(errs, Error{
 					Title:  "Range Pagination Not Supported.",
-					Detail: fmt.Sprintf("%s is not a support pagination option", option),
+					Detail: fmt.Sprintf("%s is not a supported pagination option", option),
 					Source: ErrorSource{
 						Parameter: option.String(),
 					},
