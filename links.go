@@ -14,6 +14,12 @@ const (
 	PreviousKey string = "prev"
 	// SelfKey represents the key for the self link
 	SelfKey string = "self"
+	// FirstKey represents the key for the first link
+	FirstKey string = "first"
+	// LastKey represents the key for the last link
+	LastKey string = "last"
+	// RelatedKey represents the key for the related link
+	RelatedKey string = "related"
 )
 
 // Meta is a map of meta data to attach with a response.
@@ -243,7 +249,7 @@ func CursorNextLink(href string, params Params, size int, after *string) (link L
 		Href:    href,
 		Params:  params,
 		Queries: queries,
-	}, "next", true
+	}, NextKey, true
 }
 
 // CursorPrevLink creates a Link object for previous pagination step (using PageSize/PageBefore)
