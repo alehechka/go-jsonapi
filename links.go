@@ -159,54 +159,61 @@ func IsRelativeURL(str string) bool {
 	return err == nil && u.Scheme == ""
 }
 
-// NumberNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)
-func NumberNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool) Links {
+// PageSizeNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)
+func PageSizeNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool) Links {
 	return func(link Link, moreResultsAvailable bool) Links {
 		links := make(Links)
 
 		if moreResultsAvailable {
-			links[NextKey] = NumberNextLink(request)(link)
+			links[NextKey] = PageSizeNextLink(request)(link)
 		}
 
 		return links
 	}
 }
 
-// NumberNextLink creates a Link object for next pagination step (using PageNumber/PageSize)
-func NumberNextLink(request *http.Request) func(link Link) (nextLink Link) {
+// PageSizeNextLink creates a Link object for next pagination step (using PageNumber/PageSize)
+func PageSizeNextLink(request *http.Request) func(link Link) (nextLink Link) {
 	return func(link Link) Link {
 
 		link.Queries.Initialize()
+
 		pageNumber, _ := GetPageNumber(request)
 		link.Queries[PageNumber.String()] = pageNumber + 1
-		link.Queries[PageSize.String()], _ = GetPageSize(request)
+
+		if pageSize, _ := GetPageSize(request); pageSize > 0 {
+			link.Queries[PageSize.String()] = pageSize
+		}
 
 		return link
 	}
 }
 
-// OffsetNextLinks creates a Links map for next pagination step (using PageOffset/PageLimit)
-func OffsetNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool) Links {
-	return func(link Link, moreResultsAvailable bool) Links {
+// PageLimitNextLinks creates a Links map for next pagination step (using PageOffset/PageLimit)
+func PageLimitNextLinks(request *http.Request) func(link Link, moreResultsAvailable bool, numResults int) Links {
+	return func(link Link, moreResultsAvailable bool, numResults int) Links {
 		links := make(Links)
 
 		if moreResultsAvailable {
-			links[NextKey] = OffsetNextLink(request)(link)
+			links[NextKey] = PageLimitNextLink(request)(link, numResults)
 		}
 
 		return links
 	}
 }
 
-// OffsetNextLink creates a Link object for next pagination step (using PageOffset/PageLimit)
-func OffsetNextLink(request *http.Request) func(link Link) (nextLink Link) {
-	return func(link Link) (nextLink Link) {
+// PageLimitNextLink creates a Link object for next pagination step (using PageOffset/PageLimit)
+func PageLimitNextLink(request *http.Request) func(link Link, numResults int) (nextLink Link) {
+	return func(link Link, numResults int) (nextLink Link) {
 
 		link.Queries.Initialize()
+
 		pageOffset, _ := GetPageOffset(request)
-		pageLimit, _ := GetPageLimit(request)
-		link.Queries[PageOffset.String()] = pageOffset + pageLimit
-		link.Queries[PageLimit.String()] = pageLimit
+		link.Queries[PageOffset.String()] = pageOffset + numResults
+
+		if pageLimit, _ := GetPageLimit(request); pageLimit > 0 {
+			link.Queries[PageLimit.String()] = pageLimit
+		}
 
 		return link
 	}

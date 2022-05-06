@@ -99,3 +99,55 @@ func FindUnsupportedPagination(request *http.Request) func(paginationOptions ...
 		return
 	}
 }
+
+// CheckExceedsMaximumPaginationSize checks the provided request to see if any provided pagination options exceed the provided maximum
+func CheckExceedsMaximumPaginationSize(request *http.Request) func(maxSize int) Errors {
+	return func(maxSize int) (errs Errors) {
+
+		if PageSize.QueryExists(request) {
+			if pageSize, _ := GetPageSize(request); pageSize > maxSize {
+				errs = append(errs, Error{
+					Title:  "Page size requested is too large.",
+					Detail: fmt.Sprintf("You requested a size of %d, but %d is the maximum.", pageSize, maxSize),
+					Source: ErrorSource{
+						Parameter: PageSize.String(),
+					},
+					Links: Links{
+						"type": {
+							Href: "https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id--max-page-size-exceeded-error",
+						},
+					},
+					Meta: Meta{
+						"page": Meta{
+							"maxSize": maxSize,
+						},
+					},
+				})
+			}
+		}
+
+		if PageLimit.QueryExists(request) {
+			if pageLimit, _ := GetPageLimit(request); pageLimit > maxSize {
+				errs = append(errs, Error{
+					Title:  "Page limit requested is too large.",
+					Detail: fmt.Sprintf("You requested a limit of %d, but %d is the maximum.", pageLimit, maxSize),
+					Source: ErrorSource{
+						Parameter: PageLimit.String(),
+					},
+					Links: Links{
+						"type": {
+							Href: "https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id--max-page-size-exceeded-error",
+						},
+					},
+					Meta: Meta{
+						"page": Meta{
+							"maxLimit": maxSize,
+						},
+					},
+				})
+			}
+		}
+
+		return
+	}
+}

@@ -9,10 +9,22 @@ import (
 
 // UnsupportedPagination will short-circuit if one of the provided, unsupported query options is provided in the request.
 func UnsupportedPagination(paginationOptions ...jsonapi.PaginationOption) gin.HandlerFunc {
-
 	return func(c *gin.Context) {
-
 		errs := jsonapi.FindUnsupportedPagination(c.Request)(paginationOptions...)
+
+		if errs.HasErrors() {
+			c.AbortWithStatusJSON(http.StatusBadRequest, jsonapi.CreateResponse(c.Request)(jsonapi.Response{Errors: errs}))
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// ExceedsMaximumPaginationSize will short-circuit if one of the provided pagination query options exceeds the provided maximum.
+func ExceedsMaximumPaginationSize(maxSize int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		errs := jsonapi.CheckExceedsMaximumPaginationSize(c.Request)(maxSize)
 
 		if errs.HasErrors() {
 			c.AbortWithStatusJSON(http.StatusBadRequest, jsonapi.CreateResponse(c.Request)(jsonapi.Response{Errors: errs}))

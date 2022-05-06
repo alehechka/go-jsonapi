@@ -81,12 +81,12 @@ func Test_TransformLink(t *testing.T) {
 	assert.Equal(t, "/api/objects?offset=25", transformed)
 }
 
-func Test_NumberNextLinks(t *testing.T) {
+func Test_PageSizeNextLinks(t *testing.T) {
 	path := "/example"
 	num := 10
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[number]=10&page[size]=10", nil)
 	link := jsonapi.Link{Href: path, Params: jsonapi.Params{"id": num}, Queries: jsonapi.Queries{"something": "else"}}
-	links := jsonapi.NumberNextLinks(req)(link, true)
+	links := jsonapi.PageSizeNextLinks(req)(link, true)
 
 	assert.NotNil(t, links)
 	assert.Equal(t, 1, len(links))
@@ -103,12 +103,12 @@ func Test_NumberNextLinks(t *testing.T) {
 	assert.Equal(t, link.Queries["something"], nextLink.Queries["something"])
 }
 
-func Test_NumberNextLink(t *testing.T) {
+func Test_PageSizeNextLink(t *testing.T) {
 	path := "/example"
 	num := 10
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[number]=10&page[size]=10", nil)
 	link := jsonapi.Link{Href: path, Params: jsonapi.Params{"id": num}}
-	nextLink := jsonapi.NumberNextLink(req)(link)
+	nextLink := jsonapi.PageSizeNextLink(req)(link)
 
 	transformed := jsonapi.TransformLink(nextLink, "https://example.com")
 
@@ -119,12 +119,12 @@ func Test_NumberNextLink(t *testing.T) {
 	assert.Equal(t, num, nextLink.Queries[jsonapi.PageSize.String()])
 }
 
-func Test_OffsetNextLinks(t *testing.T) {
+func Test_PageLimitNextLinks(t *testing.T) {
 	path := "/example"
 	num := 10
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[offset]=10&page[limit]=10", nil)
 	link := jsonapi.Link{Href: path, Params: jsonapi.Params{"id": num}}
-	links := jsonapi.OffsetNextLinks(req)(link, true)
+	links := jsonapi.PageLimitNextLinks(req)(link, true, num)
 
 	assert.Equal(t, 1, len(links))
 
@@ -139,12 +139,12 @@ func Test_OffsetNextLinks(t *testing.T) {
 	assert.Equal(t, num, nextLink.Queries[jsonapi.PageLimit.String()])
 }
 
-func Test_OffsetNextLink(t *testing.T) {
+func Test_PageLimitNextLink(t *testing.T) {
 	path := "/example"
 	num := 10
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[offset]=10&page[limit]=10", nil)
 	link := jsonapi.Link{Href: path, Params: jsonapi.Params{"id": num}}
-	nextLink := jsonapi.OffsetNextLink(req)(link)
+	nextLink := jsonapi.PageLimitNextLink(req)(link, num)
 
 	transformed := jsonapi.TransformLink(nextLink, "https://example.com")
 
