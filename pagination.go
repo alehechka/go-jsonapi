@@ -1,6 +1,7 @@
 package jsonapi
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -32,8 +33,6 @@ const (
 	PageBefore PaginationOption = "page[before]"
 	// PageAfter used with cursor-based pagination. Use in conjunction with PageSize and PageBefore
 	PageAfter PaginationOption = "page[after]"
-	// Include used to request extra resources to include
-	Include string = "include"
 )
 
 // GetPageOffset retrieves integer parsed PageOffset from query parameters
@@ -73,4 +72,30 @@ func GetPageAfter(request *http.Request) (int, error) {
 
 func getQueryInteger(request *http.Request, option PaginationOption) (int, error) {
 	return strconv.Atoi(request.URL.Query().Get(option.String()))
+}
+
+// FindUnsupportedPagination will return with an array of Errors if any unsupported pagination options are found in query parameters
+func FindUnsupportedPagination(request *http.Request) func(paginationOptions ...PaginationOption) Errors {
+	return func(paginationOptions ...PaginationOption) (errs Errors) {
+
+		for _, option := range paginationOptions {
+			if option.QueryExists(request) {
+				errs = append(errs, Error{
+					Title:  "Range Pagination Not Supported.",
+					Detail: fmt.Sprintf("%s is not a support pagination option", option),
+					Source: ErrorSource{
+						Parameter: option.String(),
+					},
+					Status: http.StatusBadRequest,
+					Links: Links{
+						"type": {
+							Href: "https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id--range-pagination-not-supported-error",
+						},
+					},
+				})
+			}
+		}
+
+		return
+	}
 }
