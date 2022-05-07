@@ -94,8 +94,8 @@ func (d SomeData) Meta() interface{} {
 func TestTransformResponse(t *testing.T) {
 
 	type args struct {
-		data     jsonapi.Data
-		included []jsonapi.Data
+		node     jsonapi.Node
+		included []jsonapi.Node
 		errors   []jsonapi.Error
 		links    jsonapi.Links
 		meta     interface{}
@@ -109,7 +109,7 @@ func TestTransformResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item",
 			args: args{
-				data: SomeData{
+				node: SomeData{
 					Name:     "Testing data 1",
 					TranID:   "12345",
 					ShipTo:   "Location 1",
@@ -135,7 +135,7 @@ func TestTransformResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item relationship",
 			args: args{
-				data: SomeData{
+				node: SomeData{
 					Name:     "Testing data 1",
 					TranID:   "1111",
 					ShipTo:   "Location 1",
@@ -174,7 +174,7 @@ func TestTransformResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.MarshalIndent(jsonapi.TransformResponse(jsonapi.Response{
-				Data:     tt.args.data,
+				Node:     tt.args.node,
 				Included: tt.args.included,
 				Errors:   tt.args.errors,
 				Links:    tt.args.links,
@@ -196,8 +196,8 @@ func TestTransformResponse(t *testing.T) {
 func TestTransformCollectionResponse(t *testing.T) {
 
 	type args struct {
-		data     []jsonapi.Data
-		included []jsonapi.Data
+		node     []jsonapi.Node
+		included []jsonapi.Node
 		errors   []jsonapi.Error
 		links    jsonapi.Links
 		meta     interface{}
@@ -211,7 +211,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -241,7 +241,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with a single data item relationship",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "1111",
@@ -282,7 +282,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -328,7 +328,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values and included",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -342,7 +342,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: []jsonapi.Data{
+				included: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -393,7 +393,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values and links",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -472,7 +472,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 		{
 			name: "Response test with multiple data values and links",
 			args: args{
-				data: []jsonapi.Data{
+				node: []jsonapi.Node{
 					SomeData{
 						Name:     "Testing data 1",
 						TranID:   "12345",
@@ -548,7 +548,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.MarshalIndent(jsonapi.TransformCollectionResponse(jsonapi.CollectionResponse{
-				Data:     tt.args.data,
+				Nodes:    tt.args.node,
 				Included: tt.args.included,
 				Errors:   tt.args.errors,
 				Links:    tt.args.links,

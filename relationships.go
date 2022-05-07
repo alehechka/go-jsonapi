@@ -26,16 +26,25 @@ type internalRelationship struct {
 	Meta  interface{} `json:"meta,omitempty"`
 }
 
-func transformToInternalRelationships(d Data, baseURL string) map[string]internalRelationship {
-	relationships := d.Relationships()
+type Relationable interface {
+	Relationships() map[string]Relationship
+}
 
-	internalRelationships := make(map[string]internalRelationship)
+func transformToInternalRelationships(node Node, baseURL string) map[string]internalRelationship {
+	if relationshipNode, isRelationable := node.(Relationable); isRelationable {
 
-	for k, v := range relationships {
-		internalRelationships[k] = transformToInternalRelationship(v, baseURL)
+		relationships := relationshipNode.Relationships()
+
+		internalRelationships := make(map[string]internalRelationship)
+
+		for k, v := range relationships {
+			internalRelationships[k] = transformToInternalRelationship(v, baseURL)
+		}
+
+		return internalRelationships
 	}
 
-	return internalRelationships
+	return nil
 }
 
 func transformToInternalRelationship(r Relationship, baseURL string) internalRelationship {

@@ -64,6 +64,10 @@ type Links map[string]Link
 // LinkMap should have values of type JsonAPILink or string
 type LinkMap map[string]interface{} // JsonAPILink | string
 
+type Linkable interface {
+	Links() Links
+}
+
 // TransformLinks transforms provided Links map into a JSON:API LinkMap
 func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 	links := make(LinkMap)

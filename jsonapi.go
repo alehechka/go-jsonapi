@@ -11,8 +11,8 @@ package jsonapi
 
 // Response is the standard JSONAPI Response struct
 type Response struct {
-	Data     Data
-	Included []Data
+	Node     Node
+	Included interface{} // []Node
 	Errors   Errors
 	Links    Links
 	Meta     interface{}
@@ -20,8 +20,8 @@ type Response struct {
 
 // CollectionResponse is the standard JSONAPI collection Response struct
 type CollectionResponse struct {
-	Data     []Data
-	Included []Data
+	Nodes    interface{} // Node | []Node
+	Included interface{} // []Node
 	Errors   Errors
 	Links    Links
 	Meta     interface{}
@@ -29,9 +29,9 @@ type CollectionResponse struct {
 
 // TransformedResponse is the resulting Data struct after transforming via TransformResponse/TransformCollectionResponse
 type TransformedResponse struct {
-	Data     interface{}     `json:"data,omitempty"` // Data | []Data
+	Data     interface{}     `json:"data,omitempty"` // Node | []Node
 	Errors   []internalError `json:"errors,omitempty"`
-	Included []internalData  `json:"included,omitempty"`
+	Included []internalNode  `json:"included,omitempty"`
 	Links    LinkMap         `json:"links,omitempty"`
 	Meta     interface{}     `json:"meta,omitempty"`
 }
@@ -51,11 +51,11 @@ func TransformResponse(r Response, baseURL string) TransformedResponse {
 
 // TransformCollectionResponse transforms provided parameters into standardized collection JSONAPI format
 func TransformCollectionResponse(r CollectionResponse, baseURL string) TransformedResponse {
-	data := transformCollectionResponseData(r, baseURL)
+	nodes := transformCollectionResponseData(r, baseURL)
 
 	return TransformedResponse{
-		Data:     data,
-		Included: transformIncluded(r.Included, data, baseURL),
+		Data:     nodes,
+		Included: transformIncluded(r.Included, nodes, baseURL),
 		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,
