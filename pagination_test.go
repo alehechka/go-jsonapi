@@ -197,16 +197,28 @@ func Test_GetPageAfter_ParsingError(t *testing.T) {
 	assert.Equal(t, 0, after)
 }
 
-func Test_FindUnsupportedPagination(t *testing.T) {
+func Test_CheckUnsupportedPagination(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[after]=ten&page[number]=10", nil)
 
-	errs := jsonapi.FindUnsupportedPagination(req)(jsonapi.PageAfter)
+	errs := jsonapi.CheckUnsupportedPagination(req)(jsonapi.PageAfter)
 
 	assert.NotNil(t, errs)
 	assert.Equal(t, 1, len(errs))
 
 	err := errs[0]
 	assert.Equal(t, jsonapi.PageAfter.String(), err.Source.(jsonapi.ErrorSource).Parameter)
+}
+
+func Test_CheckSupportedPagination(t *testing.T) {
+	req := httptest.NewRequest("GET", "http://localhost:8080/example?page[after]=ten&page[number]=10", nil)
+
+	errs := jsonapi.CheckSupportedPagination(req)(jsonapi.PageAfter)
+
+	assert.NotNil(t, errs)
+	assert.Equal(t, 1, len(errs))
+
+	err := errs[0]
+	assert.Equal(t, jsonapi.PageNumber.String(), err.Source.(jsonapi.ErrorSource).Parameter)
 }
 
 func Test_CheckExceedsMaximumPaginationSize(t *testing.T) {

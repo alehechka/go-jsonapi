@@ -7,10 +7,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UnsupportedPagination will short-circuit if one of the provided, unsupported query options is provided in the request.
-func UnsupportedPagination(paginationOptions ...jsonapi.PaginationOption) gin.HandlerFunc {
+// SupportedPagination will short-circuit if a pagination query that is not in the provided, supported options.
+func SupportedPagination(supportedOptions ...jsonapi.PaginationOption) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		errs := jsonapi.FindUnsupportedPagination(c.Request)(paginationOptions...)
+		errs := jsonapi.CheckSupportedPagination(c.Request)(supportedOptions...)
+
+		if errs.HasErrors() {
+			c.AbortWithStatusJSON(http.StatusBadRequest, jsonapi.CreateResponse(c.Request)(jsonapi.Response{Errors: errs}))
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// UnsupportedPagination will short-circuit if one of the provided, unsupported query options is provided in the request.
+func UnsupportedPagination(unsupportedOptions ...jsonapi.PaginationOption) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		errs := jsonapi.CheckUnsupportedPagination(c.Request)(unsupportedOptions...)
 
 		if errs.HasErrors() {
 			c.AbortWithStatusJSON(http.StatusBadRequest, jsonapi.CreateResponse(c.Request)(jsonapi.Response{Errors: errs}))
