@@ -8,9 +8,9 @@ type ResourceIdentifier interface {
 }
 
 type internalResourceIdentifier struct {
-	ID       string      `json:"id"`
-	Datatype string      `json:"type"`
-	Meta     interface{} `json:"meta,omitempty"`
+	ID   string      `json:"id"`
+	Type string      `json:"type"`
+	Meta interface{} `json:"meta,omitempty"`
 }
 
 // Relationship is the standard JSONAPI Relationship struct
@@ -69,18 +69,18 @@ func transformToInternalRelationshipData(r Relationship, baseURL string) interfa
 
 	if len(relationshipData) == 1 && !isToMany {
 		return internalResourceIdentifier{
-			ID:       relationshipData[0].ID(),
-			Datatype: relationshipData[0].Type(),
-			Meta:     relationshipData[0].Meta(),
+			ID:   relationshipData[0].ID(),
+			Type: relationshipData[0].Type(),
+			Meta: relationshipData[0].Meta(),
 		}
 	}
 
 	data := make([]internalResourceIdentifier, 0)
 	for _, relationship := range relationshipData {
 		data = append(data, internalResourceIdentifier{
-			ID:       relationship.ID(),
-			Datatype: relationship.Type(),
-			Meta:     relationship.Meta(),
+			ID:   relationship.ID(),
+			Type: relationship.Type(),
+			Meta: relationship.Meta(),
 		})
 	}
 

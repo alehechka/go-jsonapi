@@ -38,7 +38,7 @@ type TransformedResponse struct {
 
 // TransformResponse transforms provided parameters into standardized JSONAPI format
 func TransformResponse(r Response, baseURL string) TransformedResponse {
-	data := transformResponseData(r, baseURL)
+	data := transformResponseNode(r, baseURL)
 
 	return TransformedResponse{
 		Data:     data,
@@ -51,7 +51,7 @@ func TransformResponse(r Response, baseURL string) TransformedResponse {
 
 // TransformCollectionResponse transforms provided parameters into standardized collection JSONAPI format
 func TransformCollectionResponse(r CollectionResponse, baseURL string) TransformedResponse {
-	nodes := transformCollectionResponseData(r, baseURL)
+	nodes := transformCollectionResponseNode(r, baseURL)
 
 	return TransformedResponse{
 		Data:     nodes,

@@ -22,7 +22,7 @@ type internalNode struct {
 	Meta          interface{}                     `json:"meta,omitempty"`
 }
 
-func transformToInternalDataStructArray(payload interface{}, baseURL string) []internalNode {
+func transformToInternalNodeStructArray(payload interface{}, baseURL string) []internalNode {
 	internalNodes := make([]internalNode, 0)
 
 	var nodes []Node
@@ -42,13 +42,13 @@ func transformToInternalDataStructArray(payload interface{}, baseURL string) []i
 	}
 
 	for _, node := range nodes {
-		internalNodes = append(internalNodes, transformToInternalDataStruct(node, baseURL))
+		internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
 	}
 
 	return internalNodes
 }
 
-func transformToInternalDataStruct(node Node, baseURL string) internalNode {
+func transformToInternalNodeStruct(node Node, baseURL string) internalNode {
 	var links LinkMap
 	if linkableNode, isLinkable := node.(Linkable); isLinkable {
 		links = TransformLinks(linkableNode.Links(), baseURL)
@@ -69,18 +69,18 @@ func transformToInternalDataStruct(node Node, baseURL string) internalNode {
 	}
 }
 
-func transformResponseData(response Response, baseURL string) interface{} {
+func transformResponseNode(response Response, baseURL string) interface{} {
 	if response.Errors.HasErrors() {
 		return nil
 	}
-	return transformToInternalDataStruct(response.Node, baseURL)
+	return transformToInternalNodeStruct(response.Node, baseURL)
 }
 
-func transformCollectionResponseData(response CollectionResponse, baseURL string) interface{} {
+func transformCollectionResponseNode(response CollectionResponse, baseURL string) interface{} {
 	if response.Errors.HasErrors() {
 		return nil
 	}
-	return transformToInternalDataStructArray(response.Nodes, baseURL)
+	return transformToInternalNodeStructArray(response.Nodes, baseURL)
 }
 
 func transformIncluded(includedNode interface{}, node interface{}, baseURL string) (included []internalNode) {
@@ -89,5 +89,5 @@ func transformIncluded(includedNode interface{}, node interface{}, baseURL strin
 		return
 	}
 
-	return transformToInternalDataStructArray(includedNode, baseURL)
+	return transformToInternalNodeStructArray(includedNode, baseURL)
 }
