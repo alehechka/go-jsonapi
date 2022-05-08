@@ -93,7 +93,19 @@ func CheckUnsupportedPagination(request *http.Request) func(unsupportedOptions .
 
 		for _, option := range unsupportedOptions {
 			if option.QueryExists(request) {
-				errs = append(errs, CreateRangePaginationError(option))
+				errs = append(errs, Error{
+					Title:  "Range Pagination Not Supported.",
+					Detail: fmt.Sprintf("%s is not a supported pagination option", option),
+					Source: ErrorSource{
+						Parameter: option.String(),
+					},
+					Status: http.StatusBadRequest,
+					Links: Links{
+						"type": {
+							Href: "https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id--range-pagination-not-supported-error",
+						},
+					},
+				})
 			}
 		}
 
@@ -101,6 +113,7 @@ func CheckUnsupportedPagination(request *http.Request) func(unsupportedOptions .
 	}
 }
 
+// CheckSupportedPagination will return with an array of Errors if any pagination option not supported are found in query parameters.
 func CheckSupportedPagination(request *http.Request) func(supportedOptions ...PaginationOption) Errors {
 	return func(supportedOptions ...PaginationOption) (errs Errors) {
 		var unsupportedOptions []PaginationOption
@@ -115,22 +128,6 @@ func CheckSupportedPagination(request *http.Request) func(supportedOptions ...Pa
 		}
 
 		return CheckUnsupportedPagination(request)(unsupportedOptions...)
-	}
-}
-
-func CreateRangePaginationError(option PaginationOption) Error {
-	return Error{
-		Title:  "Range Pagination Not Supported.",
-		Detail: fmt.Sprintf("%s is not a supported pagination option", option),
-		Source: ErrorSource{
-			Parameter: option.String(),
-		},
-		Status: http.StatusBadRequest,
-		Links: Links{
-			"type": {
-				Href: "https://jsonapi.org/profiles/ethanresnick/cursor-pagination/#auto-id--range-pagination-not-supported-error",
-			},
-		},
 	}
 }
 

@@ -1,6 +1,8 @@
 package jsonapi
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Node is the standard JSONAPI Data struct
 type Node interface {
@@ -29,29 +31,31 @@ func transformNodes(payload interface{}, baseURL string) ([]internalNode, []Node
 	internalNodes := make([]internalNode, 0)
 	included := make([]Node, 0)
 
-	switch vals := reflect.ValueOf(payload); vals.Kind() {
-	case reflect.Slice:
-		for x := 0; x < vals.Len(); x++ {
-			if node, isNodeable := vals.Index(x).Interface().(Node); isNodeable {
-				internalNode, inc := transformNode(node, baseURL)
-				internalNodes = append(internalNodes, internalNode)
-				included = append(included, inc...)
-			}
-		}
-	case reflect.Ptr:
-		if reflect.Indirect(vals).Kind() == reflect.Struct {
-			if node, isNodeable := vals.Interface().(Node); isNodeable {
-				internalNode, inc := transformNode(node, baseURL)
-				internalNodes = append(internalNodes, internalNode)
-				included = append(included, inc...)
-			}
-		}
-	case reflect.Struct:
-		if node, isNodeable := vals.Interface().(Node); isNodeable {
+	appendNode := func(obj interface{}) {
+		if node, isNodeable := obj.(Node); isNodeable {
 			internalNode, inc := transformNode(node, baseURL)
 			internalNodes = append(internalNodes, internalNode)
 			included = append(included, inc...)
 		}
+	}
+
+	switch vals := reflect.ValueOf(payload); vals.Kind() {
+	case reflect.Slice:
+		for x := 0; x < vals.Len(); x++ {
+			appendNode(vals.Index(x).Interface())
+		}
+	case reflect.Ptr:
+		switch ptrVals := reflect.Indirect(vals); ptrVals.Kind() {
+		case reflect.Struct:
+			appendNode(ptrVals.Interface())
+		case reflect.Slice:
+			for x := 0; x < ptrVals.Len(); x++ {
+				appendNode(ptrVals.Index(x).Interface())
+			}
+		}
+
+	case reflect.Struct:
+		appendNode(vals.Interface())
 	}
 
 	return internalNodes, included
