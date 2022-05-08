@@ -89,7 +89,7 @@ func transformResponseNode(response Response, baseURL string) (interface{}, []No
 	if response.Errors.HasErrors() {
 		return nil, nil
 	}
-	return transformNodes(response.Node, baseURL)
+	return transformNode(response.Node, baseURL)
 }
 
 func transformCollectionResponseNodes(response CollectionResponse, baseURL string) (interface{}, []Node) {

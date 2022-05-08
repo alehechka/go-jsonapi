@@ -147,17 +147,17 @@ func TestTransformResponse(t *testing.T) {
 					"type": "dataRelationship"
 				}
 			}
-		},
-		"included": [
-			{
-				"id": "cust1234",
-				"type": "dataRelationship",
-				"attributes": {
-					"UUID": "cust1234"
-				}
+		}
+	},
+	"included": [
+		{
+			"id": "cust1234",
+			"type": "dataRelationship",
+			"attributes": {
+				"UUID": "cust1234"
 			}
-		]
-	}
+		}
+	]
 }`,
 		},
 	}
@@ -264,6 +264,15 @@ func TestTransformCollectionResponse(t *testing.T) {
 						"type": "dataRelationship"
 					}
 				}
+			}
+		}
+	],
+	"included": [
+		{
+			"id": "cust1234",
+			"type": "dataRelationship",
+			"attributes": {
+				"UUID": "cust1234"
 			}
 		}
 	]
