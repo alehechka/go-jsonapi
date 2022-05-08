@@ -1,23 +1,11 @@
 package jsonapi
 
-// ResourceIdentifier is the standard Resource Identifier struct
-type ResourceIdentifier interface {
-	ID() string
-	Type() string
-	Meta() interface{}
-}
+import "reflect"
 
 type internalResourceIdentifier struct {
 	ID   string      `json:"id"`
 	Type string      `json:"type"`
 	Meta interface{} `json:"meta,omitempty"`
-}
-
-// Relationship is the standard JSONAPI Relationship struct
-type Relationship interface {
-	Links() Links
-	Data() ([]ResourceIdentifier, bool) // identifiers, is relationship to many
-	Meta() interface{}
 }
 
 type internalRelationship struct {
@@ -26,63 +14,98 @@ type internalRelationship struct {
 	Meta  interface{} `json:"meta,omitempty"`
 }
 
-type Relationable interface {
-	Relationships() map[string]Relationship
+type Relationship interface {
+	Data() interface{} // Node | []Node
 }
 
-func transformToInternalRelationships(node Node, baseURL string) map[string]internalRelationship {
+type Relationable interface {
+	Relationships() map[string]interface{} // Node | []Node
+}
+
+func transformRelationships(node Node, baseURL string) (map[string]internalRelationship, []Node) {
 	if relationshipNode, isRelationable := node.(Relationable); isRelationable {
 
 		relationships := relationshipNode.Relationships()
 
 		internalRelationships := make(map[string]internalRelationship)
+		included := make([]Node, 0)
 
 		for k, v := range relationships {
-			internalRelationships[k] = transformToInternalRelationship(v, baseURL)
+			relationship, inc := transformRelationship(v, node.ID(), baseURL)
+			internalRelationships[k] = relationship
+			included = append(included, inc...)
 		}
 
-		return internalRelationships
+		return internalRelationships, included
 	}
 
-	return nil
+	return nil, nil
 }
 
-func transformToInternalRelationship(r Relationship, baseURL string) internalRelationship {
+func transformRelationship(relationship interface{}, parentID string, baseURL string) (internalRelationship, []Node) {
+
+	var links LinkMap
+	if linkableNode, isLinkable := relationship.(RelationshipLinkable); isLinkable {
+		links = TransformLinks(linkableNode.RelationshipLinks(parentID), baseURL)
+	}
+
+	var meta interface{}
+	if metaNode, isMetable := relationship.(Metable); isMetable {
+		meta = metaNode.Meta()
+	}
+
+	data, included := transformRelationshipData(relationship)
 
 	return internalRelationship{
-		Links: TransformLinks(r.Links(), baseURL),
-		Meta:  r.Meta(),
-		Data:  transformToInternalRelationshipData(r, baseURL),
-	}
+		Links: links,
+		Meta:  meta,
+		Data:  data,
+	}, included
 }
 
-func transformToInternalRelationshipData(r Relationship, baseURL string) interface{} {
-	relationshipData, isToMany := r.Data()
-
-	if relationshipData == nil {
-		return nil
+func transformRelationshipData(r interface{}) (interface{}, []Node) {
+	if relationship, isRelationship := r.(Relationship); isRelationship {
+		return transformRelationNodes(relationship.Data())
 	}
+	return transformRelationNodes(r)
+}
 
-	if len(relationshipData) == 0 && isToMany {
-		return [0]internalResourceIdentifier{}
-	}
+func transformRelationNodes(r interface{}) (interface{}, []Node) {
+	switch vals := reflect.ValueOf(r); vals.Kind() {
+	case reflect.Slice:
+		internalResources := make([]internalResourceIdentifier, 0)
+		included := make([]Node, 0)
+		for x := 0; x < vals.Len(); x++ {
+			if node, isNodeable := vals.Index(x).Interface().(Node); isNodeable {
+				internalResources = append(internalResources, createResourceIdentifier(node))
+				included = append(included, node)
+			}
+		}
+		return internalResources, included
+	case reflect.Ptr:
+		if reflect.Indirect(vals).Kind() == reflect.Struct {
+			if node, isNodeable := vals.Interface().(Node); isNodeable {
+				return createResourceIdentifier(node), []Node{node}
+			}
+		}
 
-	if len(relationshipData) == 1 && !isToMany {
-		return internalResourceIdentifier{
-			ID:   relationshipData[0].ID(),
-			Type: relationshipData[0].Type(),
-			Meta: relationshipData[0].Meta(),
+	case reflect.Struct:
+		if node, isNodeable := vals.Interface().(Node); isNodeable {
+			return createResourceIdentifier(node), []Node{node}
 		}
 	}
+	return nil, nil
+}
 
-	data := make([]internalResourceIdentifier, 0)
-	for _, relationship := range relationshipData {
-		data = append(data, internalResourceIdentifier{
-			ID:   relationship.ID(),
-			Type: relationship.Type(),
-			Meta: relationship.Meta(),
-		})
+func createResourceIdentifier(resource Node) internalResourceIdentifier {
+	var meta interface{}
+	if metaNode, isMetable := resource.(Metable); isMetable {
+		meta = metaNode.Meta()
 	}
 
-	return data
+	return internalResourceIdentifier{
+		ID:   resource.ID(),
+		Type: resource.Type(),
+		Meta: meta,
+	}
 }

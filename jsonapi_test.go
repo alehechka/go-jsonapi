@@ -18,44 +18,36 @@ func (d SomeRelatedData) ID() string {
 func (d SomeRelatedData) Type() string {
 	return "relatedData"
 }
-func (d SomeRelatedData) Meta() interface{} {
-	return nil
-}
 
 type DataRelationship struct {
-	ID string `json:"id"`
+	UUID string `json:"UUID"`
 }
 
-func (d DataRelationship) Links() jsonapi.Links {
+func (d DataRelationship) ID() string {
+	return d.UUID
+}
+
+func (d DataRelationship) Type() string {
+	return "dataRelationship"
+}
+
+func (d DataRelationship) RelationshipLinks(parentID string) jsonapi.Links {
 	return jsonapi.Links{
 		"resource": {
-			Href: "/path/to/resource/:id",
+			Href: "/path/to/resource/:id/data",
 			Params: map[string]interface{}{
-				"id": d.ID,
+				"id": parentID,
 			},
 		},
 	}
 }
 
-func (d DataRelationship) Data() ([]jsonapi.ResourceIdentifier, bool) {
-	arr := make([]jsonapi.ResourceIdentifier, 1)
-
-	arr[0] = SomeRelatedData{
-		CustomerID: "cust1234",
-	}
-
-	return arr, false
-}
-
-func (d DataRelationship) Meta() interface{} {
-	return nil
-}
-
 type SomeData struct {
-	Name     string `json:"name"`
-	TranID   string `json:"tranId"`
-	ShipTo   string `json:"shipTo"`
-	ItemName string `json:"itemName"`
+	Name             string           `json:"name"`
+	TranID           string           `json:"tranId"`
+	ShipTo           string           `json:"shipTo"`
+	ItemName         string           `json:"itemName"`
+	DataRelationship DataRelationship `json:"-"`
 }
 
 func (d SomeData) ID() string {
@@ -66,39 +58,28 @@ func (d SomeData) Type() string {
 	return "Data"
 }
 
-func (d SomeData) Attributes() interface{} {
-	return d
-}
-
 // TODO Add an example here
 func (d SomeData) Links() jsonapi.Links {
 	return nil
 }
 
-func (d SomeData) Relationships() map[string]jsonapi.Relationship {
+func (d SomeData) Relationships() map[string]interface{} {
 	if d.TranID == "1111" {
-		return map[string]jsonapi.Relationship{
-			"relatedData": DataRelationship{
-				ID: d.TranID,
-			},
+		return map[string]interface{}{
+			"relatedData": d.DataRelationship,
 		}
 	}
 
 	return nil
 }
 
-func (d SomeData) Meta() interface{} {
-	return nil
-}
-
 func TestTransformResponse(t *testing.T) {
 
 	type args struct {
-		node     jsonapi.Node
-		included []jsonapi.Node
-		errors   []jsonapi.Error
-		links    jsonapi.Links
-		meta     interface{}
+		node   jsonapi.Node
+		errors []jsonapi.Error
+		links  jsonapi.Links
+		meta   interface{}
 	}
 
 	tests := []struct {
@@ -115,9 +96,8 @@ func TestTransformResponse(t *testing.T) {
 					ShipTo:   "Location 1",
 					ItemName: "Box-o-shingles",
 				},
-				included: nil,
-				links:    nil,
-				meta:     nil,
+				links: nil,
+				meta:  nil,
 			},
 			want: `{
 	"data": {
@@ -140,10 +120,12 @@ func TestTransformResponse(t *testing.T) {
 					TranID:   "1111",
 					ShipTo:   "Location 1",
 					ItemName: "Box-o-shingles",
+					DataRelationship: DataRelationship{
+						UUID: "cust1234",
+					},
 				},
-				included: nil,
-				links:    nil,
-				meta:     nil,
+				links: nil,
+				meta:  nil,
 			},
 			want: `{
 	"data": {
@@ -158,14 +140,23 @@ func TestTransformResponse(t *testing.T) {
 		"relationships": {
 			"relatedData": {
 				"links": {
-					"resource": "https://example.com/path/to/resource/1111"
+					"resource": "https://example.com/path/to/resource/1111/data"
 				},
 				"data": {
 					"id": "cust1234",
-					"type": "relatedData"
+					"type": "dataRelationship"
 				}
 			}
-		}
+		},
+		"included": [
+			{
+				"id": "cust1234",
+				"type": "dataRelationship",
+				"attributes": {
+					"UUID": "cust1234"
+				}
+			}
+		]
 	}
 }`,
 		},
@@ -174,11 +165,10 @@ func TestTransformResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.MarshalIndent(jsonapi.TransformResponse(jsonapi.Response{
-				Node:     tt.args.node,
-				Included: tt.args.included,
-				Errors:   tt.args.errors,
-				Links:    tt.args.links,
-				Meta:     tt.args.meta,
+				Node:   tt.args.node,
+				Errors: tt.args.errors,
+				Links:  tt.args.links,
+				Meta:   tt.args.meta,
 			}, "https://example.com"), "", "\t")
 			if err != nil {
 				t.Errorf("TransformResponse() error %v", err)
@@ -196,11 +186,10 @@ func TestTransformResponse(t *testing.T) {
 func TestTransformCollectionResponse(t *testing.T) {
 
 	type args struct {
-		node     []jsonapi.Node
-		included []jsonapi.Node
-		errors   []jsonapi.Error
-		links    jsonapi.Links
-		meta     interface{}
+		node   []jsonapi.Node
+		errors []jsonapi.Error
+		links  jsonapi.Links
+		meta   interface{}
 	}
 
 	tests := []struct {
@@ -219,9 +208,8 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Box-o-shingles",
 					},
 				},
-				included: nil,
-				links:    nil,
-				meta:     nil,
+				links: nil,
+				meta:  nil,
 			},
 			want: `{
 	"data": [
@@ -247,11 +235,13 @@ func TestTransformCollectionResponse(t *testing.T) {
 						TranID:   "1111",
 						ShipTo:   "Location 1",
 						ItemName: "Box-o-shingles",
+						DataRelationship: DataRelationship{
+							UUID: "cust1234",
+						},
 					},
 				},
-				included: nil,
-				links:    nil,
-				meta:     nil,
+				links: nil,
+				meta:  nil,
 			},
 			want: `{
 	"data": [
@@ -267,11 +257,11 @@ func TestTransformCollectionResponse(t *testing.T) {
 			"relationships": {
 				"relatedData": {
 					"links": {
-						"resource": "https://example.com/path/to/resource/1111"
+						"resource": "https://example.com/path/to/resource/1111/data"
 					},
 					"data": {
 						"id": "cust1234",
-						"type": "relatedData"
+						"type": "dataRelationship"
 					}
 				}
 			}
@@ -296,9 +286,8 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: nil,
-				links:    nil,
-				meta:     nil,
+				links: nil,
+				meta:  nil,
 			},
 			want: `{
 	"data": [
@@ -342,14 +331,6 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: []jsonapi.Node{
-					SomeData{
-						Name:     "Testing data 1",
-						TranID:   "12345",
-						ShipTo:   "Location 1",
-						ItemName: "Box-o-shingles",
-					},
-				},
 				links: nil,
 				meta:  nil,
 			},
@@ -375,18 +356,6 @@ func TestTransformCollectionResponse(t *testing.T) {
 				"itemName": "Lot-o-nails"
 			}
 		}
-	],
-	"included": [
-		{
-			"id": "12345",
-			"type": "Data",
-			"attributes": {
-				"name": "Testing data 1",
-				"tranId": "12345",
-				"shipTo": "Location 1",
-				"itemName": "Box-o-shingles"
-			}
-		}
 	]
 }`,
 		},
@@ -407,7 +376,6 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: nil,
 				links: jsonapi.Links{
 					"self": {
 						Href: "/api/rest/someData",
@@ -486,8 +454,7 @@ func TestTransformCollectionResponse(t *testing.T) {
 						ItemName: "Lot-o-nails",
 					},
 				},
-				included: nil,
-				links:    nil,
+				links: nil,
 				meta: struct {
 					Test string `json:"test"`
 				}{
@@ -548,11 +515,10 @@ func TestTransformCollectionResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.MarshalIndent(jsonapi.TransformCollectionResponse(jsonapi.CollectionResponse{
-				Nodes:    tt.args.node,
-				Included: tt.args.included,
-				Errors:   tt.args.errors,
-				Links:    tt.args.links,
-				Meta:     tt.args.meta,
+				Nodes:  tt.args.node,
+				Errors: tt.args.errors,
+				Links:  tt.args.links,
+				Meta:   tt.args.meta,
 			}, "https://example.com"), "", "\t")
 			if err != nil {
 				t.Errorf("TransformCollectionResponse() error %v", err)

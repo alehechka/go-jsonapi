@@ -68,6 +68,10 @@ type Linkable interface {
 	Links() Links
 }
 
+type RelationshipLinkable interface {
+	RelationshipLinks(parentID string) Links
+}
+
 // TransformLinks transforms provided Links map into a JSON:API LinkMap
 func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 	links := make(LinkMap)

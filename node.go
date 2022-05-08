@@ -25,28 +25,39 @@ type internalNode struct {
 	Meta          interface{}                     `json:"meta,omitempty"`
 }
 
-func transformToInternalNodeStructArray(payload interface{}, baseURL string) []internalNode {
+func transformNodes(payload interface{}, baseURL string) ([]internalNode, []Node) {
 	internalNodes := make([]internalNode, 0)
+	included := make([]Node, 0)
 
 	switch vals := reflect.ValueOf(payload); vals.Kind() {
 	case reflect.Slice:
 		for x := 0; x < vals.Len(); x++ {
 			if node, isNodeable := vals.Index(x).Interface().(Node); isNodeable {
-				internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
+				internalNode, inc := transformNode(node, baseURL)
+				internalNodes = append(internalNodes, internalNode)
+				included = append(included, inc...)
 			}
 		}
 	case reflect.Ptr:
 		if reflect.Indirect(vals).Kind() == reflect.Struct {
 			if node, isNodeable := vals.Interface().(Node); isNodeable {
-				internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
+				internalNode, inc := transformNode(node, baseURL)
+				internalNodes = append(internalNodes, internalNode)
+				included = append(included, inc...)
 			}
+		}
+	case reflect.Struct:
+		if node, isNodeable := vals.Interface().(Node); isNodeable {
+			internalNode, inc := transformNode(node, baseURL)
+			internalNodes = append(internalNodes, internalNode)
+			included = append(included, inc...)
 		}
 	}
 
-	return internalNodes
+	return internalNodes, included
 }
 
-func transformToInternalNodeStruct(node Node, baseURL string) internalNode {
+func transformNode(node Node, baseURL string) (internalNode, []Node) {
 	var links LinkMap
 	if linkableNode, isLinkable := node.(Linkable); isLinkable {
 		links = TransformLinks(linkableNode.Links(), baseURL)
@@ -62,35 +73,28 @@ func transformToInternalNodeStruct(node Node, baseURL string) internalNode {
 		attributes = attributeNode.Attributes()
 	}
 
+	relationships, included := transformRelationships(node, baseURL)
+
 	return internalNode{
 		ID:            node.ID(),
 		Type:          node.Type(),
 		Attributes:    attributes,
 		Links:         links,
 		Meta:          meta,
-		Relationships: transformToInternalRelationships(node, baseURL),
-	}
+		Relationships: relationships,
+	}, included
 }
 
-func transformResponseNode(response Response, baseURL string) interface{} {
+func transformResponseNode(response Response, baseURL string) (interface{}, []Node) {
 	if response.Errors.HasErrors() {
-		return nil
+		return nil, nil
 	}
-	return transformToInternalNodeStruct(response.Node, baseURL)
+	return transformNodes(response.Node, baseURL)
 }
 
-func transformCollectionResponseNode(response CollectionResponse, baseURL string) interface{} {
+func transformCollectionResponseNodes(response CollectionResponse, baseURL string) (interface{}, []Node) {
 	if response.Errors.HasErrors() {
-		return nil
+		return nil, nil
 	}
-	return transformToInternalNodeStructArray(response.Nodes, baseURL)
-}
-
-func transformIncluded(includedNode interface{}, node interface{}, baseURL string) (included []internalNode) {
-	// included cannot exist if node does not exist: https://jsonapi.org/format/#document-top-level
-	if node == nil {
-		return
-	}
-
-	return transformToInternalNodeStructArray(includedNode, baseURL)
+	return transformNodes(response.Nodes, baseURL)
 }
