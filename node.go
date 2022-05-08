@@ -6,6 +6,9 @@ import "reflect"
 type Node interface {
 	ID() string
 	Type() string
+}
+
+type Attributeable interface {
 	Attributes() interface{}
 }
 
@@ -25,24 +28,19 @@ type internalNode struct {
 func transformToInternalNodeStructArray(payload interface{}, baseURL string) []internalNode {
 	internalNodes := make([]internalNode, 0)
 
-	var nodes []Node
 	switch vals := reflect.ValueOf(payload); vals.Kind() {
 	case reflect.Slice:
 		for x := 0; x < vals.Len(); x++ {
 			if node, isNodeable := vals.Index(x).Interface().(Node); isNodeable {
-				nodes = append(nodes, node)
+				internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
 			}
 		}
 	case reflect.Ptr:
 		if reflect.Indirect(vals).Kind() == reflect.Struct {
 			if node, isNodeable := vals.Interface().(Node); isNodeable {
-				nodes = append(nodes, node)
+				internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
 			}
 		}
-	}
-
-	for _, node := range nodes {
-		internalNodes = append(internalNodes, transformToInternalNodeStruct(node, baseURL))
 	}
 
 	return internalNodes
@@ -59,10 +57,15 @@ func transformToInternalNodeStruct(node Node, baseURL string) internalNode {
 		meta = metaNode.Meta()
 	}
 
+	var attributes interface{} = node
+	if attributeNode, isAttributeable := node.(Attributeable); isAttributeable {
+		attributes = attributeNode.Attributes()
+	}
+
 	return internalNode{
 		ID:            node.ID(),
 		Type:          node.Type(),
-		Attributes:    node.Attributes(),
+		Attributes:    attributes,
 		Links:         links,
 		Meta:          meta,
 		Relationships: transformToInternalRelationships(node, baseURL),
