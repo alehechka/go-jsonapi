@@ -8,14 +8,14 @@ type ErrorSource struct {
 
 // Error is the standard JSONAPI Error struct
 type Error struct {
-	ID     string      `json:"id,omitempty"`
-	Links  Links       `json:"links,omitempty"`
-	Status int         `json:"status,omitempty"`
-	Code   int         `json:"code,omitempty"`
-	Title  string      `json:"title,omitempty"`
-	Detail string      `json:"detail,omitempty"`
-	Source interface{} `json:"source,omitempty"` // ErrorSource
-	Meta   interface{} `json:"meta,omitempty"`
+	ID     string `json:"id,omitempty"`
+	Links  Links  `json:"links,omitempty"`
+	Status int    `json:"status,omitempty"`
+	Code   int    `json:"code,omitempty"`
+	Title  string `json:"title,omitempty"`
+	Detail string `json:"detail,omitempty"`
+	Source any    `json:"source,omitempty"` // ErrorSource
+	Meta   any    `json:"meta,omitempty"`
 }
 
 // Errors is a standard array of JSONAPI Error structs
@@ -28,14 +28,14 @@ func (errs Errors) HasErrors() bool {
 }
 
 type internalError struct {
-	ID     string      `json:"id,omitempty"`
-	Links  LinkMap     `json:"links,omitempty"`
-	Status int         `json:"status,omitempty"`
-	Code   int         `json:"code,omitempty"`
-	Title  string      `json:"title,omitempty"`
-	Detail string      `json:"detail,omitempty"`
-	Source interface{} `json:"source,omitempty"` // ErrorSource
-	Meta   interface{} `json:"meta,omitempty"`
+	ID     string  `json:"id,omitempty"`
+	Links  LinkMap `json:"links,omitempty"`
+	Status int     `json:"status,omitempty"`
+	Code   int     `json:"code,omitempty"`
+	Title  string  `json:"title,omitempty"`
+	Detail string  `json:"detail,omitempty"`
+	Source any     `json:"source,omitempty"` // ErrorSource
+	Meta   any     `json:"meta,omitempty"`
 }
 
 func transformToInternalErrorStructs(errs []Error, baseURL string) []internalError {

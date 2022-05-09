@@ -14,24 +14,24 @@ type Response struct {
 	Node   Node
 	Errors Errors
 	Links  Links
-	Meta   interface{}
+	Meta   any
 }
 
 // CollectionResponse is the standard JSONAPI collection Response struct
 type CollectionResponse struct {
-	Nodes  interface{} // Node | []Node
+	Nodes  any // Node | []Node
 	Errors Errors
 	Links  Links
-	Meta   interface{}
+	Meta   any
 }
 
 // TransformedResponse is the resulting Data struct after transforming via TransformResponse/TransformCollectionResponse
 type TransformedResponse struct {
-	Data     interface{}     `json:"data,omitempty"` // Node | []Node
+	Data     any             `json:"data,omitempty"` // Node | []Node
 	Errors   []internalError `json:"errors,omitempty"`
 	Included []internalNode  `json:"included,omitempty"`
 	Links    LinkMap         `json:"links,omitempty"`
-	Meta     interface{}     `json:"meta,omitempty"`
+	Meta     any             `json:"meta,omitempty"`
 }
 
 // TransformResponse transforms provided parameters into standardized JSONAPI format

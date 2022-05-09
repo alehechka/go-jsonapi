@@ -1,6 +1,6 @@
 package jsonapi
 
-func transformIncluded(includedNode []Node, node interface{}, baseURL string) (included []internalNode) {
+func transformIncluded(includedNode []Node, node any, baseURL string) (included []internalNode) {
 	// included cannot exist if node does not exist: https://jsonapi.org/format/#document-top-level
 	if node == nil {
 		return
@@ -19,12 +19,12 @@ func transformIncludedNode(node Node, baseURL string) internalNode {
 		links = TransformLinks(linkableNode.Links(), baseURL)
 	}
 
-	var meta interface{}
+	var meta any
 	if metaNode, isMetable := node.(Metable); isMetable {
 		meta = metaNode.Meta()
 	}
 
-	var attributes interface{} = node
+	var attributes any = node
 	if attributeNode, isAttributeable := node.(Attributeable); isAttributeable {
 		attributes = attributeNode.Attributes()
 	}

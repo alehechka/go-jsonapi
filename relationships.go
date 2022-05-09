@@ -3,23 +3,23 @@ package jsonapi
 import "reflect"
 
 type internalResourceIdentifier struct {
-	ID   string      `json:"id"`
-	Type string      `json:"type"`
-	Meta interface{} `json:"meta,omitempty"`
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Meta any    `json:"meta,omitempty"`
 }
 
 type internalRelationship struct {
-	Links LinkMap     `json:"links,omitempty"`
-	Data  interface{} `json:"data"` // ResourceIdentifier | []ResourceIdentifier
-	Meta  interface{} `json:"meta,omitempty"`
+	Links LinkMap `json:"links,omitempty"`
+	Data  any     `json:"data"` // ResourceIdentifier | []ResourceIdentifier
+	Meta  any     `json:"meta,omitempty"`
 }
 
 type Relationship interface {
-	Data() interface{} // Node | []Node
+	Data() any // Node | []Node
 }
 
 type Relationable interface {
-	Relationships() map[string]interface{} // Node | []Node
+	Relationships() map[string]any // Node | []Node
 }
 
 func transformRelationships(node Node, baseURL string) (map[string]internalRelationship, []Node) {
@@ -42,14 +42,14 @@ func transformRelationships(node Node, baseURL string) (map[string]internalRelat
 	return nil, nil
 }
 
-func transformRelationship(relationship interface{}, parentID string, baseURL string) (internalRelationship, []Node) {
+func transformRelationship(relationship any, parentID string, baseURL string) (internalRelationship, []Node) {
 
 	var links LinkMap
 	if linkableNode, isLinkable := relationship.(RelationshipLinkable); isLinkable {
 		links = TransformLinks(linkableNode.RelationshipLinks(parentID), baseURL)
 	}
 
-	var meta interface{}
+	var meta any
 	if metaNode, isMetable := relationship.(Metable); isMetable {
 		meta = metaNode.Meta()
 	}
@@ -63,14 +63,14 @@ func transformRelationship(relationship interface{}, parentID string, baseURL st
 	}, included
 }
 
-func transformRelationshipData(r interface{}) (interface{}, []Node) {
+func transformRelationshipData(r any) (any, []Node) {
 	if relationship, isRelationship := r.(Relationship); isRelationship {
 		return transformRelationNodes(relationship.Data())
 	}
 	return transformRelationNodes(r)
 }
 
-func transformRelationNodes(r interface{}) (interface{}, []Node) {
+func transformRelationNodes(r any) (any, []Node) {
 	switch vals := reflect.ValueOf(r); vals.Kind() {
 	case reflect.Slice:
 		internalResources := make([]internalResourceIdentifier, 0)
@@ -82,23 +82,21 @@ func transformRelationNodes(r interface{}) (interface{}, []Node) {
 			}
 		}
 		return internalResources, included
-	case reflect.Ptr:
-		if reflect.Indirect(vals).Kind() == reflect.Struct {
-			if node, isNodeable := vals.Interface().(Node); isNodeable {
-				return createResourceIdentifier(node), []Node{node}
-			}
-		}
 
 	case reflect.Struct:
 		if node, isNodeable := vals.Interface().(Node); isNodeable {
 			return createResourceIdentifier(node), []Node{node}
 		}
+
+	case reflect.Ptr:
+		return transformRelationNodes(reflect.Indirect(vals).Interface())
 	}
+
 	return nil, nil
 }
 
 func createResourceIdentifier(resource Node) internalResourceIdentifier {
-	var meta interface{}
+	var meta any
 	if metaNode, isMetable := resource.(Metable); isMetable {
 		meta = metaNode.Meta()
 	}
