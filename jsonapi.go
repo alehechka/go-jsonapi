@@ -41,7 +41,7 @@ func TransformResponse(r Response, baseURL string) TransformedResponse {
 	return TransformedResponse{
 		Data:     data,
 		Included: transformIncluded(included, data, baseURL),
-		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Errors:   transformErrors(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,
 	}
@@ -54,7 +54,7 @@ func TransformCollectionResponse(r CollectionResponse, baseURL string) Transform
 	return TransformedResponse{
 		Data:     nodes,
 		Included: transformIncluded(included, nodes, baseURL),
-		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Errors:   transformErrors(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,
 	}

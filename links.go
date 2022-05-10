@@ -155,16 +155,16 @@ func stringOrLinkObject(jsonLink Link) (link any) {
 	return jsonLink
 }
 
-// IsURL parses string and returns boolean if string is valid URL
-func IsURL(str string) bool {
+// IsAbsoluteURL parses string and returns boolean if string is valid URL
+func IsAbsoluteURL(str string) bool {
 	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
+	return err == nil && u.IsAbs()
 }
 
 // IsRelativeURL parses string and returns boolean is string is a relative URL
 func IsRelativeURL(str string) bool {
 	u, err := url.Parse(str)
-	return err == nil && u.Scheme == ""
+	return err == nil && !u.IsAbs()
 }
 
 // PageSizeNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)

@@ -116,3 +116,11 @@ func Test_transformResponseNode_WithErrors(t *testing.T) {
 	assert.Nil(t, node)
 	assert.Nil(t, included)
 }
+
+func Test_transformNode_NilStruct(t *testing.T) {
+
+	node, included := transformNode(Response{}.Node, baseURL)
+
+	assert.Equal(t, internalNode{}, node)
+	assert.Nil(t, included)
+}

@@ -47,7 +47,7 @@ func AppendGeneratedSelfLink(request *http.Request) func(links Links, baseURL st
 			links = make(Links)
 		}
 
-		links["self"] = Link{
+		links[SelfKey] = Link{
 			Href: href,
 		}
 

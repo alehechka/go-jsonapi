@@ -33,6 +33,10 @@ func transformResponseNode(response Response, baseURL string) (node any, include
 }
 
 func transformNode(node Node, baseURL string) (internalNode, []Node) {
+	if node == nil {
+		return internalNode{}, nil
+	}
+
 	var links LinkMap
 	if linkableNode, isLinkable := node.(Linkable); isLinkable {
 		links = TransformLinks(linkableNode.Links(), baseURL)
