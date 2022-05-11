@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	// NextKey represents the key for the next link
-	NextKey string = "next"
-	// PreviousKey represents the key for the previous link
-	PreviousKey string = "prev"
-	// SelfKey represents the key for the self link
-	SelfKey string = "self"
-	// FirstKey represents the key for the first link
-	FirstKey string = "first"
-	// LastKey represents the key for the last link
-	LastKey string = "last"
-	// RelatedKey represents the key for the related link
-	RelatedKey string = "related"
-)
-
 // Meta is a map of meta data to attach with a response.
 type Meta map[string]interface{}
 
@@ -63,6 +48,14 @@ type Links map[string]Link
 
 // LinkMap should have values of type JsonAPILink or string
 type LinkMap map[string]interface{} // JsonAPILink | string
+
+type Linkable interface {
+	Links() Links
+}
+
+type RelationshipLinkable interface {
+	RelationshipLinks(parentID string) Links
+}
 
 // TransformLinks transforms provided Links map into a JSON:API LinkMap
 func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
@@ -147,16 +140,16 @@ func stringOrLinkObject(jsonLink Link) (link interface{}) {
 	return jsonLink
 }
 
-// IsURL parses string and returns boolean if string is valid URL
-func IsURL(str string) bool {
+// IsAbsoluteURL parses string and returns boolean if string is valid URL
+func IsAbsoluteURL(str string) bool {
 	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
+	return err == nil && u.IsAbs()
 }
 
 // IsRelativeURL parses string and returns boolean is string is a relative URL
 func IsRelativeURL(str string) bool {
 	u, err := url.Parse(str)
-	return err == nil && u.Scheme == ""
+	return err == nil && !u.IsAbs()
 }
 
 // PageSizeNextLinks creates a Links map for next pagination step (using PageNumber/PageSize)

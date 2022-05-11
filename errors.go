@@ -38,17 +38,17 @@ type internalError struct {
 	Meta   interface{} `json:"meta,omitempty"`
 }
 
-func transformToInternalErrorStructs(errs []Error, baseURL string) []internalError {
+func transformErrors(errs []Error, baseURL string) []internalError {
 	var internalErrors []internalError
 
 	for _, err := range errs {
-		internalErrors = append(internalErrors, transformToInternalErrorStruct(err, baseURL))
+		internalErrors = append(internalErrors, transformError(err, baseURL))
 	}
 
 	return internalErrors
 }
 
-func transformToInternalErrorStruct(err Error, baseURL string) internalError {
+func transformError(err Error, baseURL string) internalError {
 	return internalError{
 		ID:     err.ID,
 		Links:  TransformLinks(err.Links, baseURL),

@@ -9,6 +9,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_CreateResponse(t *testing.T) {
+	url := "http://localhost:8080/example?id=123"
+	req := httptest.NewRequest("GET", url, nil)
+
+	response := jsonapi.CreateResponse(req)(jsonapi.Response{
+		Links: jsonapi.Links{
+			jsonapi.SelfKey: jsonapi.Link{
+				Href: "https://example.com/resource",
+			},
+		},
+	})
+
+	assert.NotNil(t, response)
+	assert.NotNil(t, response.Links)
+	assert.NotNil(t, response.Links[jsonapi.SelfKey])
+	assert.Equal(t, url, response.Links[jsonapi.SelfKey])
+}
+
+func Test_CreateCollectionResponse(t *testing.T) {
+	url := "http://localhost:8080/example?id=123"
+	req := httptest.NewRequest("GET", url, nil)
+
+	response := jsonapi.CreateCollectionResponse(req)(jsonapi.CollectionResponse{
+		Links: jsonapi.Links{
+			jsonapi.SelfKey: jsonapi.Link{
+				Href: "https://example.com/resource",
+			},
+		},
+	})
+
+	assert.NotNil(t, response)
+	assert.NotNil(t, response.Links)
+	assert.NotNil(t, response.Links[jsonapi.SelfKey])
+	assert.Equal(t, url, response.Links[jsonapi.SelfKey])
+}
+
 func Test_AppendGeneratedSelfLink(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost:8080/example?id=123", nil)
 	baseURL, path := jsonapi.CreateBaseURL(req)

@@ -11,39 +11,37 @@ package jsonapi
 
 // Response is the standard JSONAPI Response struct
 type Response struct {
-	Data     Data
-	Included []Data
-	Errors   Errors
-	Links    Links
-	Meta     interface{}
+	Node   Node
+	Errors Errors
+	Links  Links
+	Meta   interface{}
 }
 
 // CollectionResponse is the standard JSONAPI collection Response struct
 type CollectionResponse struct {
-	Data     []Data
-	Included []Data
-	Errors   Errors
-	Links    Links
-	Meta     interface{}
+	Nodes  interface{} // Node | []Node
+	Errors Errors
+	Links  Links
+	Meta   interface{}
 }
 
 // TransformedResponse is the resulting Data struct after transforming via TransformResponse/TransformCollectionResponse
 type TransformedResponse struct {
-	Data     interface{}     `json:"data,omitempty"` // Data | []Data
+	Data     interface{}     `json:"data,omitempty"` // Node | []Node
 	Errors   []internalError `json:"errors,omitempty"`
-	Included []internalData  `json:"included,omitempty"`
+	Included []internalNode  `json:"included,omitempty"`
 	Links    LinkMap         `json:"links,omitempty"`
 	Meta     interface{}     `json:"meta,omitempty"`
 }
 
 // TransformResponse transforms provided parameters into standardized JSONAPI format
 func TransformResponse(r Response, baseURL string) TransformedResponse {
-	data := transformResponseData(r, baseURL)
+	data, included := transformResponseNode(r, baseURL)
 
 	return TransformedResponse{
 		Data:     data,
-		Included: transformIncluded(r.Included, data, baseURL),
-		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Included: transformIncluded(included, data, baseURL),
+		Errors:   transformErrors(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,
 	}
@@ -51,12 +49,12 @@ func TransformResponse(r Response, baseURL string) TransformedResponse {
 
 // TransformCollectionResponse transforms provided parameters into standardized collection JSONAPI format
 func TransformCollectionResponse(r CollectionResponse, baseURL string) TransformedResponse {
-	data := transformCollectionResponseData(r, baseURL)
+	nodes, included := transformCollectionResponseNodes(r, baseURL)
 
 	return TransformedResponse{
-		Data:     data,
-		Included: transformIncluded(r.Included, data, baseURL),
-		Errors:   transformToInternalErrorStructs(r.Errors, baseURL),
+		Data:     nodes,
+		Included: transformIncluded(included, nodes, baseURL),
+		Errors:   transformErrors(r.Errors, baseURL),
 		Links:    TransformLinks(r.Links, baseURL),
 		Meta:     r.Meta,
 	}

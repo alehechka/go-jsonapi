@@ -47,22 +47,13 @@ func AppendGeneratedSelfLink(request *http.Request) func(links Links, baseURL st
 			links = make(Links)
 		}
 
-		links["self"] = Link{
+		links[SelfKey] = Link{
 			Href: href,
 		}
 
 		return links
 	}
 }
-
-const (
-	// ForwardedPrefix represents the prefix that is dropped when proxied through rest-api
-	ForwardedPrefix string = "X-Forwarded-Prefix"
-	// ForwardedProto represents the protocol that is received prior to being forwarded (http | https)
-	ForwardedProto string = "X-Forwarded-Proto"
-	// ForwardedHost represents the original host header received prior to being forwarded (example.com)
-	ForwardedHost string = "X-Forwarded-Host"
-)
 
 // CreateBaseURL will generate a baseURL, prioritizing proxied http headers
 func CreateBaseURL(request *http.Request) (baseURL string, path string) {

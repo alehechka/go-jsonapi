@@ -1,14 +1,8 @@
 package jsonapi
 
 import (
-	"errors"
 	"net/http"
 	"strings"
-)
-
-const (
-	// Include used to request extra resources to include
-	Include string = "include"
 )
 
 // Included string array representing the included query parameter resources
@@ -36,13 +30,6 @@ func (included Included) HasResource(resource string) bool {
 
 	return false
 }
-
-var (
-	// ErrTooManyIncluded number of included is greater than number of available resources
-	ErrTooManyIncluded error = errors.New("included query has too many resources")
-	// ErrResourceNotAvailable member of included is not an available resource
-	ErrResourceNotAvailable error = errors.New("resource from included query not available")
-)
 
 // VerifyResources verifies that all requested included members exist in available resources
 func (included Included) VerifyResources(resources ...string) error {
