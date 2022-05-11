@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-go@v2
 
       - name: Install dependencies
-        run: go get -d -v
+        run: go mod download
 
       - name: Run unit tests
         run: go test ./... --cover

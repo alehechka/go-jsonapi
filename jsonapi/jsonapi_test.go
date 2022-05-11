@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/alehechka/go-jsonapi"
+	"github.com/alehechka/go-jsonapi/jsonapi"
 )
 
 type SomeRelatedData struct {
