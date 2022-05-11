@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/alehechka/go-jsonapi"
+	"github.com/alehechka/go-jsonapi/jsonapi"
 	"github.com/gin-gonic/gin"
 )
 

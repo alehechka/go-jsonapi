@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alehechka/go-jsonapi"
+	"github.com/alehechka/go-jsonapi/jsonapi"
 	"github.com/alehechka/go-jsonapi/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
