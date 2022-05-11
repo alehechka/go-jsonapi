@@ -8,10 +8,10 @@ import (
 )
 
 // Meta is a map of meta data to attach with a response.
-type Meta map[string]any
+type Meta map[string]interface{}
 
 // Params is a map of path parameters to substitute into a url.
-type Params map[string]any
+type Params map[string]interface{}
 
 // Initialize will initialize the Params map if it is nil
 func (p *Params) Initialize() {
@@ -21,7 +21,7 @@ func (p *Params) Initialize() {
 }
 
 // Queries is a map of query parameters to append to a url.
-type Queries map[string]any
+type Queries map[string]interface{}
 
 // Initialize will initialize the Queries map if it is nil
 func (q *Queries) Initialize() {
@@ -47,7 +47,7 @@ type Link struct {
 type Links map[string]Link
 
 // LinkMap should have values of type JsonAPILink or string
-type LinkMap map[string]any // JsonAPILink | string
+type LinkMap map[string]interface{} // JsonAPILink | string
 
 type Linkable interface {
 	Links() Links
@@ -69,7 +69,7 @@ func TransformLinks(jsonLinks Links, baseURL string) LinkMap {
 }
 
 // TransformLink transforms an individual Link into a JSON:API link object
-func TransformLink(jsonLink Link, baseURL string) (link any) {
+func TransformLink(jsonLink Link, baseURL string) (link interface{}) {
 
 	jsonLink = appendBaseURL(jsonLink, baseURL)
 
@@ -132,7 +132,7 @@ func appendQueryParams(link Link) Link {
 	return link
 }
 
-func stringOrLinkObject(jsonLink Link) (link any) {
+func stringOrLinkObject(jsonLink Link) (link interface{}) {
 	if jsonLink.Meta == nil || len(jsonLink.Meta) == 0 {
 		return jsonLink.Href
 	}

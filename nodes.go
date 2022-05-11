@@ -2,18 +2,18 @@ package jsonapi
 
 import "reflect"
 
-func transformCollectionResponseNodes(response CollectionResponse, baseURL string) (data any, included []Node) {
+func transformCollectionResponseNodes(response CollectionResponse, baseURL string) (data interface{}, included []Node) {
 	if response.Errors.HasErrors() {
 		return nil, nil
 	}
 	return transformNodes(response.Nodes, baseURL)
 }
 
-func transformNodes(payload any, baseURL string) ([]internalNode, []Node) {
+func transformNodes(payload interface{}, baseURL string) ([]internalNode, []Node) {
 	internalNodes := make([]internalNode, 0)
 	included := make([]Node, 0)
 
-	appendNode := func(obj any) {
+	appendNode := func(obj interface{}) {
 		if node, isNodeable := obj.(Node); isNodeable {
 			internalNode, inc := transformNode(node, baseURL)
 			internalNodes = append(internalNodes, internalNode)

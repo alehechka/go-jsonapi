@@ -1,5 +1,7 @@
 package jsonapi
 
+import "errors"
+
 // Standard JSON:API Link mapping keys
 const (
 	// NextKey represents the key for the next link
@@ -57,3 +59,11 @@ var PaginationOptions []PaginationOption = []PaginationOption{
 	PageBefore,
 	PageAfter,
 }
+
+// Error messages
+var (
+	// ErrTooMinterface{}Included number of included is greater than number of available resources
+	ErrTooManyIncluded error = errors.New("included query has too many resources")
+	// ErrResourceNotAvailable member of included is not an available resource
+	ErrResourceNotAvailable error = errors.New("resource from included query not available")
+)
