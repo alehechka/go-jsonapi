@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	// NextKey represents the key for the next link
-	NextKey string = "next"
-	// PreviousKey represents the key for the previous link
-	PreviousKey string = "prev"
-	// SelfKey represents the key for the self link
-	SelfKey string = "self"
-	// FirstKey represents the key for the first link
-	FirstKey string = "first"
-	// LastKey represents the key for the last link
-	LastKey string = "last"
-	// RelatedKey represents the key for the related link
-	RelatedKey string = "related"
-)
-
 // Meta is a map of meta data to attach with a response.
 type Meta map[string]any
 

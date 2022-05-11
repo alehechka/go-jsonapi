@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	// Include used to request extra resources to include
-	Include string = "include"
-)
-
 // Included string array representing the included query parameter resources
 type Included []string
 
