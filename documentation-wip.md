@@ -22,56 +22,7 @@ go get github.com/alehechka/go-jsonapi
 
 This library does not create any unnecessary marshalling assumptions, it will simply take in `Response` or `CollectionResponse` objects and transform them into JSON:API structs that keep the same provided object as the `Attributes` value. This allows an overlaying marshalling implementation to take over after transformation.
 
-<details><summary>Example Implementation</summary>
-
-```go
-package main
-
-import (
-    "github.com/gin-gonic/gin"
-    "github.com/alehechka/go-jsonapi"
-)
-
-func main() {
-    engine := gin.Default()
-
-    engine.GET("/record", getRecords)
-    engine.GET("/record/:id", getRecord)
-
-    engine.Run()
-}
-
-type Record struct {
-    RecordID string `json:"-"`
-    // variables
-}
-
-func (record Record) ID() string {
-    return record.RecordID
-}
-
-func (record Record) Type() string {
-    return "records"
-}
-
-func getRecords(ctx *gin.Context) {
-    records := getRecordsFromDatabase()
-
-    ctx.JSON(200, jsonapi.CreateCollectionResponse(ctx.Request)(jsonapi.CollectionResponse{
-        Nodes: records,
-    }))
-}
-
-func getRecord(ctx *gin.Context) {
-    record := getRecordFromDatabase(ctx.Param("id"))
-
-    ctx.JSON(200, jsonapi.CreateResponse(ctx.Request)(jsonapi.Response{
-        Node: record,
-    }))
-}
-```
-
-</details>
+View examples here: [/examples](/examples)
 
 ### Interface Methods
 

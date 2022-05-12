@@ -10,20 +10,20 @@ type internalResourceIdentifier struct {
 
 type internalRelationship struct {
 	Links LinkMap     `json:"links,omitempty"`
-	Data  interface{} `json:"data"` // ResourceIdentifier | []ResourceIdentifier
+	Data  interface{} `json:"data"` // internalResourceIdentifier | []internalResourceIdentifier
 	Meta  interface{} `json:"meta,omitempty"`
 }
 
-type Relationship interface {
+type Nodeable interface {
 	Data() interface{} // Node | []Node
 }
 
-type Relationable interface {
+type Relationshipable interface {
 	Relationships() map[string]interface{} // Node | []Node
 }
 
 func transformRelationships(node Node, baseURL string) (map[string]internalRelationship, []Node) {
-	if relationshipNode, isRelationable := node.(Relationable); isRelationable {
+	if relationshipNode, isRelationshipable := node.(Relationshipable); isRelationshipable {
 
 		relationships := relationshipNode.Relationships()
 
@@ -64,7 +64,7 @@ func transformRelationship(relationship interface{}, parentID string, baseURL st
 }
 
 func transformRelationshipData(r interface{}) (interface{}, []Node) {
-	if relationship, isRelationship := r.(Relationship); isRelationship {
+	if relationship, isNodeable := r.(Nodeable); isNodeable {
 		return transformRelationNodes(relationship.Data())
 	}
 	return transformRelationNodes(r)
