@@ -21,6 +21,14 @@ const (
 // Include query parameter used to request extra resources to include in response
 const Include string = "include"
 
+// HTTP Header keys and values
+const (
+	// ContentType is the standard Content-Type header.
+	ContentType string = "Content-Type"
+	// MediaType is the standard JSON:API media type for the Content-Type header.
+	MediaType string = "application/vnd.api+json"
+)
+
 // Standard HTTP Headers
 const (
 	// ForwardedPrefix represents the prefix that is dropped when proxied through rest-api

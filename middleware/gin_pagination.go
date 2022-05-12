@@ -35,8 +35,8 @@ func UnsupportedPagination(unsupportedOptions ...jsonapi.PaginationOption) gin.H
 	}
 }
 
-// ExceedsMaximumPaginationSize will short-circuit if one of the provided pagination query options exceeds the provided maximum.
-func ExceedsMaximumPaginationSize(maxSize int) gin.HandlerFunc {
+// MaximumPaginationSize will short-circuit if one of the provided pagination query options exceeds the provided maximum.
+func MaximumPaginationSize(maxSize int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		errs := jsonapi.CheckExceedsMaximumPaginationSize(c.Request)(maxSize)
 
