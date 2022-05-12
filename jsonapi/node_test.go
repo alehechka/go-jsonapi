@@ -77,6 +77,21 @@ func (d testStructMethods) Relationships() map[string]interface{} {
 	}
 }
 
+func (d testStructMethods) Data() interface{} {
+	return d
+}
+
+func (d testStructMethods) RelationshipLinks(parentID string) Links {
+	return Links{
+		SelfKey: Link{
+			Href: "/path/to/resource/:id/child",
+			Params: Params{
+				"id": parentID,
+			},
+		},
+	}
+}
+
 func Test_transformNode_Methods(t *testing.T) {
 	node := testStructMethods{
 		TestID: "1234",

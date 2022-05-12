@@ -81,7 +81,7 @@ func TransformLink(jsonLink Link, baseURL string) (link interface{}) {
 }
 
 func appendBaseURL(link Link, baseURL string) Link {
-	// only append baseURL if href is a relative URL
+
 	if IsRelativeURL(link.Href) {
 		link.Href = fmt.Sprintf("%s%s", baseURL, link.Href)
 	}
@@ -90,20 +90,22 @@ func appendBaseURL(link Link, baseURL string) Link {
 }
 
 func substitutePathParams(link Link) Link {
-	if link.Params != nil && len(link.Params) > 0 {
-		pathParts := strings.Split(link.Href, "/")
+	if link.Params == nil && len(link.Params) == 0 {
+		return link
+	}
 
-		for index, pathPart := range pathParts {
-			if strings.HasPrefix(pathPart, ":") {
-				paramString := strings.TrimPrefix(pathPart, ":")
-				if param, exists := link.Params[paramString]; exists {
-					pathParts[index] = fmt.Sprintf("%v", param)
-				}
+	pathParts := strings.Split(link.Href, "/")
+
+	for index, pathPart := range pathParts {
+		if strings.HasPrefix(pathPart, ":") {
+			paramString := strings.TrimPrefix(pathPart, ":")
+			if param, exists := link.Params[paramString]; exists {
+				pathParts[index] = fmt.Sprintf("%v", param)
 			}
 		}
-
-		link.Href = strings.Join(pathParts, "/")
 	}
+
+	link.Href = strings.Join(pathParts, "/")
 
 	return link
 }
