@@ -43,11 +43,11 @@ type Link struct {
 	Queries Queries `json:"-"`
 }
 
-// Links is a map of JsonAPILink objects
+// Links is a map of Link objects
 type Links map[string]Link
 
-// LinkMap should have values of type JsonAPILink or string
-type LinkMap map[string]interface{} // JsonAPILink | string
+// LinkMap should have values of type Link or string
+type LinkMap map[string]interface{} // Link | string
 
 type Linkable interface {
 	Links() Links
