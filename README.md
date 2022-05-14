@@ -72,7 +72,7 @@ The second parameter to these functions is for `baseURL`, this is used to dynami
 
 ### Recommended Usage
 
-The above functions are effectively the top-level transformation tools, however, the dynamic link creation can be made easy by supply an `*http.Request` object to the following functions instead:
+The above functions are effectively the top-level transformation tools, however, the dynamic link creation can be made easy by supplying an `*http.Request` object to the following functions instead:
 
 ```go
 req := httptest.NewRequest("GET", "http://example.com/example", nil)
@@ -96,7 +96,7 @@ The JSON:API spec also allows for `links`, `errors`, and `meta` objects at the t
 
 #### Links
 
-A top-level `links` object can be provided to both `Response` and `CollectionResponse`. See [/jsonapi/links.go](/jsonapi/links.go#L35-L44) for all available variables in `Link`.
+A top-level `links` object can be provided to both `Response` and `CollectionResponse`. See [Link](#link) below for further details.
 
 ```go
 res := jsonapi.Response{
@@ -129,7 +129,7 @@ res := jsonapi.Response{
 
 #### Errors
 
-A top-level `errors` array can be provided to both `Response` and `CollectionResponse` in the form of an array of `Error` objects. See [/jsonapi/errors.go](/jsonapi/errors.go#L10-L19) for all available variables in `Error`.
+A top-level `errors` array can be provided to both `Response` and `CollectionResponse` in the form of an array of `Error` objects. See [Error](#error) below for further detail.
 
 ```go
 res := jsonapi.Response{
@@ -145,9 +145,121 @@ res := jsonapi.Response{
 
 > It is important to note that if at least 1 error is present in this array than the top-level `data` object/array and `included` array will not be available as per the JSON:API spec for [Top Level][jsonapi-top-level]
 
+### Extending `Node` interface
+
+By default, to be considered a JSON:API resource, a struct must include the `ID()` and `Type()` methods.
+
+However, this functionality can be extended further with other methods as follows:
+
+#### `Links()`
+
+The `Links()` method allows an individual resource to generate the `links` object for itself using data from the object. See [Link](#link) below for further details.
+
+```go
+func (person Person) Links() jsonapi.Links {
+    return jsonapi.Links{
+        jsonapi.SelfKey: jsonapi.Link{
+            Href: "/people/:id",
+            Params: jsonapi.Params{
+                "id": person.ID(),
+            }
+        },
+    }
+}
+```
+
+The above scenario makes use of the `Params` field which will not be included in the resulting json, but will use the key-value pairs to substitute the values into the `href` based on keys that it finds. (Ex. `:id` in the href will be substituted with the value of `person.ID()`)
+
+#### `Relationships()`
+
+[Relationships][jsonapi-relationships] are a key object within a resource to provide linkage and information about related resources. To facilitate the mapping, the `Relationships()` method gives access to the parent struct and allows definition of the `relationships` map as follows:
+
+```go
+type Company struct {
+    CompanyID string `json:"-"`
+    Name string `json:"name"`
+    Address string `json:"address"`
+    Employees []Person `json:"-"` // recommended to omit children resources
+    Owner Person `json:"-"`
+}
+
+func (company Company) Relationships() map[string]interface{
+    return map[string]interface{}{
+        "employees": company.Employees,
+        "owner": company.Owner,
+    }
+}
+```
+
+> In the above example it is crucial that the children relationship objects adhere to the JSON:API methods, i.e. initialize their own `ID()` and `Type()` methods.
+
+#### `RelationshipLinks(parentID string)`
+
+Typically in the `relationships` object, there will be included `links` object with links to the [related resources][jsonapi-related-links]. This can be facilitated by included the `RelationshipLinks(parentID string`) on children structs. The `parentID` parameter will automatically be supplied when generated as part of a relationship by the parent struct, it is recommended to use this in generating path params for the href variable.
+
+```go
+func (person Person) RelationshipLinks(companyID string) jsonapi.Links {
+    return jsonapi.Links{
+        jsonapi.SelfKey: jsonapi.Link{
+            Href: "/companies/:companyID/relationships/employees",
+            Params: jsonapi.Params{
+                "companyID": companyID,
+            },
+        },
+        jsonapi.RelatedKey: jsonapi.Link{
+            Href: "/companies/:companyID/employees",
+            Params: jsonapi.Params{
+                "companyID": companyID,
+            },
+        },
+    }
+}
+```
+
+If the relationship will point to an array of resources, it is recommended to instead create a unique type for that array of structs as follows:
+
+```go
+type People []Person
+
+func (people People) RelationshipLinks(companyID string) jsonapi.Links {
+    return jsonapi.Links{
+        jsonapi.SelfKey: jsonapi.Link{
+            Href: "/companies/:companyID/relationships/employees",
+            Params: jsonapi.Params{
+                "companyID": companyID,
+            },
+        },
+    }
+}
+```
+
+#### `Meta()`
+
+The `Meta()` method is simply a means to generate a `meta` object for an individual resource by using the object as an input.
+
+```go
+func (person Person) Meta() interface{} {
+    return jsonapi.Meta{
+        "fullName": fmt.Sprintf("%s %s", person.FirstName, person.LastName),
+    }
+}
+```
+
+### Structs Explained
+
+#### `Link`
+
+[/jsonapi/links.go](/jsonapi/links.go#L35-L44)
+
+#### `Error`
+
+[/jsonapi/errors.go](/jsonapi/errors.go#L10-L19)
+
 <!--- Links -->
 
 [jsonapi]: (https://jsonapi.org/)
 [jsonapi-resource-object]: (https://jsonapi.org/format/#document-resource-objects)
 [jsonapi-top-level]: (https://jsonapi.org/format/#document-top-level)
+[jsonapi-relationships]: (https://jsonapi.org/format/#document-resource-object-relationships)
+[jsonapi-related-links]: (https://jsonapi.org/format/#document-resource-object-related-resource-links)
 [gin]: (https://github.com/gin-gonic/gin)
