@@ -90,13 +90,13 @@ These versions will automatically extract the baseURL from the request and suppl
 
 Additionally, using the `Create` functions will automatically generate a `self` link at the top-level object for every response.
 
-### Extended the top-level object
+### Extending the top-level resource
 
 The JSON:API spec also allows for `links`, `errors`, and `meta` objects at the top-level of the document. Both `jsonapi.Response` and `jsonapi.CollectionResponse` have values available for these.
 
 #### Links
 
-A top-level links object can be provided to both `Response` and `CollectionResponse`.
+A top-level `links` object can be provided to both `Response` and `CollectionResponse`. See [/jsonapi/links.go](/jsonapi/links.go#L35-L44) for all available variables in `Link`.
 
 ```go
 res := jsonapi.Response{
@@ -110,8 +110,44 @@ res := jsonapi.Response{
 
 > When using either `CreateResponse` or `CreateCollectionResponse` the `self` link will be automatically generated and always override an existing `self` link.
 
+#### Meta
+
+A top-level `meta` object can be provided to both `Response` and `CollectionResponse` in the form of any interface or key-value map.
+
+```go
+res := jsonapi.Response{
+    Meta: jsonapi.Meta{
+        "page": jsonapi.Meta{
+            "size": 10,
+            "number": 2,
+        },
+    },
+}
+```
+
+> The `Meta` struct is simply an alias for `map[string]interface{}`
+
+#### Errors
+
+A top-level `errors` array can be provided to both `Response` and `CollectionResponse` in the form of an array of `Error` objects. See [/jsonapi/errors.go](/jsonapi/errors.go#L10-L19) for all available variables in `Error`.
+
+```go
+res := jsonapi.Response{
+    Errors: jsonapi.Errors{
+        {
+            Status: http.StatusBadRequest,
+            Title: "Error Occurred",
+            Detail: "Failed to retrieve resource",
+        },
+    },
+}
+```
+
+> It is important to note that if at least 1 error is present in this array than the top-level `data` object/array and `included` array will not be available as per the JSON:API spec for [Top Level][jsonapi-top-level]
+
 <!--- Links -->
 
 [jsonapi]: (https://jsonapi.org/)
 [jsonapi-resource-object]: (https://jsonapi.org/format/#document-resource-objects)
+[jsonapi-top-level]: (https://jsonapi.org/format/#document-top-level)
 [gin]: (https://github.com/gin-gonic/gin)
