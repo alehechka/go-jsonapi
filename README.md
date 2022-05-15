@@ -1,6 +1,6 @@
 # go-jsonapi
 
-This Go module provides a useful API to create [JSON:API][jsonapi] HTTP servers. The primary usage of this library is to facilitate transformation from a flattened Go structs into the standardized JSON:API [resource object][jsonapi-resource-object].
+This Go module provides a useful API to create [JSON:API][jsonapi] HTTP servers. The primary usage of this library is to facilitate transformation from flattened Go structs into the standardized JSON:API [resource object][jsonapi-resource-object].
 
 Additionally, there are optional methods that can be implemented with structs to add further standardized JSON:API structures such as links, relationships, included data, and metadata.
 
@@ -8,6 +8,12 @@ Additionally, there are optional methods that can be implemented with structs to
 
 ```bash
 go get github.com/alehechka/go-jsonapi
+```
+
+Import as:
+
+```go
+import "github.com/alehechka/go-jsonapi/jsonapi"
 ```
 
 ## Usage
@@ -68,7 +74,7 @@ response := jsonapi.TransformCollectionResponse(jsonapi.CollectionResponse{
 })
 ```
 
-The second parameter to these functions is for `baseURL`, this is used to dynamically populate relative URLs in `links` objects. More on this [here]().
+The second parameter to these functions is for `baseURL`, this is used to dynamically populate relative URLs in `links` objects. More on this [here](#links).
 
 ### Recommended Usage
 
@@ -143,7 +149,7 @@ res := jsonapi.Response{
 }
 ```
 
-> It is important to note that if at least 1 error is present in this array than the top-level `data` object/array and `included` array will not be available as per the JSON:API spec for [Top Level][jsonapi-top-level]
+> It is important to note that if at least 1 error is present in this array than the top-level `data` object/array and `included` array will not be available as per the JSON:API spec for [Top Level][jsonapi-top-level].
 
 ### Extending `Node` interface
 
