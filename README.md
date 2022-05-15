@@ -249,11 +249,98 @@ func (person Person) Meta() interface{} {
 
 #### `Link`
 
-[/jsonapi/links.go](/jsonapi/links.go#L35-L44)
+The JSON:API [Links][jsonapi-document-links] states that each value of the `links` map must either be a string containing the link's URL or an object with an `href` and `meta` object. By, default, a `Link` object will be transformed into the string format in all cases expect when a non-nil, non-empty `Meta` object is provided.
+
+```go
+links := jsonapi.Links{
+    "self": jsonapi.Link{
+        Href: "/path/to/resource",
+    },
+    "next": jsonapi.Link{
+        Href: "/path/to/next/resource",
+        Meta: jsonapi.Meta{
+            "page": 3,
+        },
+    },
+}
+```
+
+After transformation and JSON marshalling assuming the provided `baseURL` is `http://example.com`, the result will be as follows:
+
+```json
+{
+	"links": {
+		"self": "http://example.com/path/to/resource",
+		"next": {
+			"href": "http://example.com/path/to/next/resource",
+			"meta": {
+				"page": 3
+			}
+		}
+	}
+}
+```
+
+Additionally, the `Link` object provides options for `Params` and `Queries`. These will always be ignored in the JSON marshalling and are used to help generate the `href` URL.
+
+- `Params` is a map of key-value pairs that represent path parameters. During transformation, href path sections that are prefixed with a colon (`:`), will be substituted with the value of a matching key in the `Params` map.
+- `Queries` is a map of key-value pairs that represent query parameters. During transformation, all key-value pairs will be generated and appended to the href as query parameters. Pre-existing query parameters in the supplied href will not be removed, but will be replaced if they have the same key.
+
+```go
+links := jsonapi.Links{
+    "self": jsonapi.Link{
+        Href: "/path/to/resource/:id?page[size]=20"
+        Params: jsonapi.Params{
+            "id": 1234,
+        },
+        Queries: jsonapi.Queries{
+            "page[number]": 4,
+        },
+    },
+}
+```
+
+After transformation and JSON marshalling assuming the provided `baseURL` is `http://example.com`, the result will be as follows:
+
+```json
+{
+	"links": {
+		"self": "http://example.com/path/to/resource/1234?page[size]=20&page[limit]=4"
+	}
+}
+```
+
+> For further details, view the implementation here: [/jsonapi/links.go](/jsonapi/links.go#L35-L44)
 
 #### `Error`
 
-[/jsonapi/errors.go](/jsonapi/errors.go#L10-L19)
+The JSON:API `Errors` specification includes a large number of fields, all of which can be supplied to the provided `Error` object. The internal `links` object of `Error` will also be supplied the `baseURL` and follow the same transformation rules outlined [above](#link).
+
+```go
+errs := jsonapi.Errors{
+    {
+        Status: http.StatusBadRequest,
+        Title: "Standard Error Occurred",
+        Detail: "Further Detail is supplied here",
+    },
+}
+```
+
+After transformation and JSON marshalling, the result will be as follows:
+
+```json
+{
+	"errors": [
+		{
+			"status": 400,
+			"title": "Standard Error Occurred",
+			"detail": "Further Detail is supplied here"
+		}
+	]
+}
+```
+
+> For further details, view the implementation here: [/jsonapi/errors.go](/jsonapi/errors.go#L10-L19)
 
 <!--- Links -->
 
@@ -262,4 +349,6 @@ func (person Person) Meta() interface{} {
 [jsonapi-top-level]: (https://jsonapi.org/format/#document-top-level)
 [jsonapi-relationships]: (https://jsonapi.org/format/#document-resource-object-relationships)
 [jsonapi-related-links]: (https://jsonapi.org/format/#document-resource-object-related-resource-links)
+[jsonapi-document-links]: (https://jsonapi.org/format/#document-links)
+[jsonapi-errors]: (https://jsonapi.org/format/#errors)
 [gin]: (https://github.com/gin-gonic/gin)
